@@ -1,0 +1,885 @@
+/* ==========================================================================
+   Mechanic Calculator - Ultra-Legible Modern UI Design System
+   視認性・操作性・可読性を最優先したハイコントラストデザインシステム
+   ========================================================================== */
+
+:root {
+  /* Color Palette - Ultra Legible High Contrast Dark Theme */
+  --bg-main: #0f172a;          /* Deep Slate Dark (Eyes-friendly & High Contrast) */
+  --bg-card: #1e293b;          /* Slate Card Surface */
+  --bg-card-hover: #334155;    /* Slightly lighter hover */
+  --bg-input: #0f172a;         /* High contrast input bg */
+  
+  --border-color: #334155;     /* Clear Card Borders */
+  --border-active: #3b82f6;    /* Bright Blue Active Border */
+  
+  /* Text Colors */
+  --text-primary: #f8fafc;     /* Pure Light White for max readability */
+  --text-secondary: #94a3b8;   /* Muted Slate Text */
+  --text-muted: #64748b;       /* Darker muted */
+  
+  /* Brand Accent Colors (Vibrant & Distinctive) */
+  --accent-blue: #3b82f6;      /* Primary Blue */
+  --accent-blue-hover: #2563eb;
+  --accent-blue-bg: rgba(59, 130, 246, 0.15);
+  
+  --accent-green: #10b981;     /* Active / Success Green */
+  --accent-cyan: #06b6d4;      /* Vault / Info Cyan */
+  --accent-amber: #f59e0b;     /* Own Car / Warning Amber */
+  --accent-purple: #8b5cf6;    /* Special Accent */
+  
+  /* Utility Dimensions */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+/* Base Resets */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Zen Kaku Gothic New', 'Outfit', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 120px; /* Space for bottom sticky bar */
+}
+
+/* Main Container */
+.app-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ==========================================================================
+   Header & Sticky Top Bar
+   ========================================================================== */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  margin: 0 -20px 24px -20px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 2px solid #334155;
+  box-shadow: var(--shadow-md);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+}
+
+.brand-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+}
+
+.brand-sub {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+/* Header Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  gap: 8px;
+  background: #1e293b;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.nav-tab {
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.nav-tab:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-tab.active {
+  background: var(--accent-blue);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+}
+
+/* ==========================================================================
+   Control Bar (Location Mode Switch & Options)
+   ========================================================================== */
+.control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: var(--bg-card);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-switch-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mode-label {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.mode-toggle-group {
+  display: flex;
+  background: #0f172a;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.mode-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.mode-btn.active {
+  background: var(--accent-blue);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0f172a;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+}
+
+.label-text {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.reset-btn {
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.reset-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Main Grid & Cards Layout
+   ========================================================================== */
+.main-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.right-column-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Cards Design System */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+  padding: 14px 20px;
+  background: #0f172a;
+  border-bottom: 2px solid var(--accent-blue);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-indicator-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--accent-blue-bg);
+  color: var(--accent-blue);
+  border: 1px solid var(--accent-blue);
+}
+
+.card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row-divider {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 0 2px 0;
+  border-bottom: 1px solid #334155;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   Item Toggle Cards & Checkbox Rows
+   ========================================================================== */
+.toggle-card {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  background: #0f172a;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.toggle-card:hover {
+  border-color: #64748b;
+  background: #1e293b;
+}
+
+.toggle-card input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.item-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.item-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+
+/* Active State for Toggle Card */
+.toggle-card:has(input:checked) {
+  background: var(--accent-blue);
+  border-color: #60a5fa;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+}
+
+.toggle-card:has(input:checked) .item-name,
+.toggle-card:has(input:checked) .item-price {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   Counter Items (Numbers input + / -)
+   ========================================================================== */
+.counter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #0f172a;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.counter-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-unit-price {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.counter-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cnt-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: #1e293b;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.cnt-btn:hover {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+.cnt-input {
+  width: 50px;
+  height: 32px;
+  text-align: center;
+  background: #020617;
+  border: 1.5px solid var(--border-color);
+  border-radius: 6px;
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.cnt-input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+/* ==========================================================================
+   Level Selection Buttons (Engine, Brakes, Tires, etc.)
+   ========================================================================== */
+.level-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #0f172a;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.level-selected-price {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+
+.level-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.lvl-btn {
+  flex: 1;
+  min-width: 54px;
+  padding: 8px 4px;
+  background: #1e293b;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: all 0.15s ease;
+}
+
+.lvl-btn small {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.lvl-btn:hover {
+  border-color: #64748b;
+  background: #334155;
+}
+
+.lvl-btn.active {
+  background: var(--accent-blue);
+  border-color: #60a5fa;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.lvl-btn.active small {
+  color: #e2e8f0;
+}
+
+/* ==========================================================================
+   Discount Section
+   ========================================================================== */
+.discount-preset-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.discount-btn {
+  flex: 1;
+  padding: 10px 8px;
+  background: #0f172a;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: all 0.2s ease;
+}
+
+.discount-btn small {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.discount-btn:hover {
+  border-color: var(--accent-amber);
+}
+
+.discount-btn.active {
+  background: var(--accent-amber);
+  border-color: #fbbf24;
+  color: #0f172a;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+}
+
+.discount-btn.active small {
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.custom-discount-box {
+  background: #0f172a;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.discount-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.discount-input-group label {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.discount-select, .discount-num-input {
+  padding: 6px 10px;
+  background: #020617;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.discount-num-input {
+  width: 90px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   Material Buyback Page Components
+   ========================================================================== */
+.buyback-container {
+  margin-bottom: 40px;
+}
+
+.buyback-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.material-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #0f172a;
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.material-card:hover {
+  border-color: var(--accent-blue);
+}
+
+.material-icon {
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #1e293b;
+  border-radius: 8px;
+}
+
+.material-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.material-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.material-unit-price {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.buyback-input {
+  width: 60px !important;
+}
+
+.btn-copy-qty {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e293b;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-copy-qty:hover {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.material-subtotal {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--accent-cyan);
+  min-width: 80px;
+  text-align: right;
+}
+
+/* ==========================================================================
+   Bottom Sticky Summary Bar (High Contrast & Clear Numbers)
+   ========================================================================== */
+.summary-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 3px solid var(--accent-blue);
+  box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.7);
+  padding: 12px 20px;
+}
+
+.summary-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.summary-amount-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-amount-block .amount-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.discount-tag {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.discount-tag.hidden {
+  display: none;
+}
+
+.amounts-grid {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.amount-card-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #020617;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+}
+
+.amount-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-label, .vault-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.total-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.vault-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+
+/* Inline Icon Copy Buttons next to main totals */
+.btn-icon-only {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 1.15rem;
+  cursor: pointer;
+  background: #1e293b;
+  border: 1.5px solid var(--border-color);
+  color: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.btn-icon-only:hover {
+  background: var(--accent-blue);
+  border-color: #60a5fa;
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+}
+
+/* Right Side Copy Action Buttons */
+.action-buttons-grid {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-copy-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #1e293b;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-copy-sub:hover {
+  background: var(--accent-blue);
+  border-color: #60a5fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.highlight-owncar {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: var(--accent-amber);
+  color: #fbbf24;
+}
+
+.highlight-owncar:hover {
+  background: var(--accent-amber);
+  border-color: #f59e0b;
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* ==========================================================================
+   Toast Notification
+   ========================================================================== */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  border-radius: 30px;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast.hidden {
+  opacity: 0;
+  transform: translate(-50%, 20px);
+  pointer-events: none;
+}

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <!-- Background Glow -->
+    <radialGradient id="logoGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#09090e" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Metallic Wrench Gradient -->
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#6b21a8"/>
+    </linearGradient>
+
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Glow Filter Circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#logoGlow)" />
+  
+  <!-- Outer Gear Hexagon -->
+  <polygon points="100,20 160,50 160,120 100,150 40,120 40,50" fill="none" stroke="url(#metalGrad)" stroke-width="6" stroke-linejoin="round" />
+
+  <!-- Crossed Wrench Icon -->
+  <g transform="translate(100, 90) scale(1.2)" stroke="url(#metalGrad)" stroke-width="12" stroke-linecap="round" fill="none">
+    <!-- Wrench 1 -->
+    <path d="M-30,-30 L30,30" />
+    <circle cx="-30" cy="-30" r="14" fill="#09090e" stroke="url(#metalGrad)" stroke-width="8" />
+    <circle cx="30" cy="30" r="14" fill="#09090e" stroke="url(#metalGrad)" stroke-width="8" />
+  </g>
+
+  <!-- Center Accent Spark -->
+  <circle cx="100" cy="90" r="8" fill="url(#accentGrad)" />
+</svg>

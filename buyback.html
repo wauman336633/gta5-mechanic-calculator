@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>素材買取 | メカニック計算ツール</title>
+  <meta name="description" content="メカニック専用の素材買取価格計算ツール">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with Navigation Tabs -->
+    <header class="header">
+      <div class="brand">
+        <img src="logo.svg" alt="Mechanic Logo" class="brand-logo">
+        <div class="brand-titles">
+          <h1 class="brand-name">MECHANIC CALCULATOR</h1>
+          <span class="brand-sub">素材買取計算モード</span>
+        </div>
+      </div>
+      <nav class="nav-tabs">
+        <a href="index.html" class="nav-tab">🔧 修理</a>
+        <a href="custom.html" class="nav-tab">🎨 カスタム</a>
+        <a href="buyback.html" class="nav-tab active">📦 買取</a>
+      </nav>
+    </header>
+
+    <!-- Top Control Bar -->
+    <section class="control-bar">
+      <div class="control-title-group">
+        <span class="mode-label">📦 素材買取計算モード</span>
+      </div>
+
+      <button id="btnResetBuyback" class="reset-btn" title="すべての数量を初期化">
+        <span class="icon">🔄</span> 一括リセット
+      </button>
+    </section>
+
+    <!-- Main Content: Material Grid -->
+    <main class="buyback-container">
+      <div class="card category-card full-width-card">
+        <div class="card-header">
+          <h2 class="card-title">💎 買取対象素材一覧 (個数を入力)</h2>
+        </div>
+        <div class="card-body buyback-grid">
+          <!-- 1. スチール (1,500円) -->
+          <div class="material-card">
+            <div class="material-icon">🔩</div>
+            <div class="material-info">
+              <span class="material-name">スチール</span>
+              <span class="material-unit-price">¥1,500 / 個</span>
+            </div>
+            <div class="counter-controls">
+              <button class="cnt-btn dec" data-target="cntSteel">-</button>
+              <input type="number" id="cntSteel" value="0" min="0" max="9999" class="cnt-input buyback-input">
+              <button class="cnt-btn inc" data-target="cntSteel">+</button>
+            </div>
+            <button class="btn-copy-qty" data-target="cntSteel" data-name="スチール" title="スチールの個数のみコピー">
+              <span class="btn-icon">📋</span>
+            </button>
+            <div class="material-subtotal" id="subtotalSteel">¥0</div>
+          </div>
+
+          <!-- 2. 鉄 (2,000円) -->
+          <div class="material-card">
+            <div class="material-icon">⚙️</div>
+            <div class="material-info">
+              <span class="material-name">鉄</span>
+              <span class="material-unit-price">¥2,000 / 個</span>
+            </div>
+            <div class="counter-controls">
+              <button class="cnt-btn dec" data-target="cntIron">-</button>
+              <input type="number" id="cntIron" value="0" min="0" max="9999" class="cnt-input buyback-input">
+              <button class="cnt-btn inc" data-target="cntIron">+</button>
+            </div>
+            <button class="btn-copy-qty" data-target="cntIron" data-name="鉄" title="鉄の個数のみコピー">
+              <span class="btn-icon">📋</span>
+            </button>
+            <div class="material-subtotal" id="subtotalIron">¥0</div>
+          </div>
+
+          <!-- 3. 金属スクラップ (300円) -->
+          <div class="material-card">
+            <div class="material-icon">🗑️</div>
+            <div class="material-info">
+              <span class="material-name">金属スクラップ</span>
+              <span class="material-unit-price">¥300 / 個</span>
+            </div>
+            <div class="counter-controls">
+              <button class="cnt-btn dec" data-target="cntScrap">-</button>
+              <input type="number" id="cntScrap" value="0" min="0" max="9999" class="cnt-input buyback-input">
+              <button class="cnt-btn inc" data-target="cntScrap">+</button>
+            </div>
+            <button class="btn-copy-qty" data-target="cntScrap" data-name="金属スクラップ" title="金属スクラップの個数のみコピー">
+              <span class="btn-icon">📋</span>
+            </button>
+            <div class="material-subtotal" id="subtotalScrap">¥0</div>
+          </div>
+
+          <!-- 4. プラスチック (500円) -->
+          <div class="material-card">
+            <div class="material-icon">🧪</div>
+            <div class="material-info">
+              <span class="material-name">プラスチック</span>
+              <span class="material-unit-price">¥500 / 個</span>
+            </div>
+            <div class="counter-controls">
+              <button class="cnt-btn dec" data-target="cntPlastic">-</button>
+              <input type="number" id="cntPlastic" value="0" min="0" max="9999" class="cnt-input buyback-input">
+              <button class="cnt-btn inc" data-target="cntPlastic">+</button>
+            </div>
+            <button class="btn-copy-qty" data-target="cntPlastic" data-name="プラスチック" title="プラスチックの個数のみコピー">
+              <span class="btn-icon">📋</span>
+            </button>
+            <div class="material-subtotal" id="subtotalPlastic">¥0</div>
+          </div>
+
+          <!-- 5. アルミニウム (1,000円) -->
+          <div class="material-card">
+            <div class="material-icon">🪨</div>
+            <div class="material-info">
+              <span class="material-name">アルミニウム</span>
+              <span class="material-unit-price">¥1,000 / 個</span>
+            </div>
+            <div class="counter-controls">
+              <button class="cnt-btn dec" data-target="cntAluminum">-</button>
+              <input type="number" id="cntAluminum" value="0" min="0" max="9999" class="cnt-input buyback-input">
+              <button class="cnt-btn inc" data-target="cntAluminum">+</button>
+            </div>
+            <button class="btn-copy-qty" data-target="cntAluminum" data-name="アルミニウム" title="アルミニウムの個数のみコピー">
+              <span class="btn-icon">📋</span>
+            </button>
+            <div class="material-subtotal" id="subtotalAluminum">¥0</div>
+          </div>
+
+          <!-- 6. ゴム (500円) -->
+          <div class="material-card">
+            <div class="material-icon">🛞</div>
+            <div class="material-info">
+              <span class="material-name">ゴム</span>
+              <span class="material-unit-price">¥500 / 個</span>
+            </div>
+            <div class="counter-controls">
+              <button class="cnt-btn dec" data-target="cntRubber">-</button>
+              <input type="number" id="cntRubber" value="0" min="0" max="9999" class="cnt-input buyback-input">
+              <button class="cnt-btn inc" data-target="cntRubber">+</button>
+            </div>
+            <button class="btn-copy-qty" data-target="cntRubber" data-name="ゴム" title="ゴムの個数のみコピー">
+              <span class="btn-icon">📋</span>
+            </button>
+            <div class="material-subtotal" id="subtotalRubber">¥0</div>
+          </div>
+
+          <!-- 7. ガラス (500円) -->
+          <div class="material-card">
+            <div class="material-icon">🪟</div>
+            <div class="material-info">
+              <span class="material-name">ガラス</span>
+              <span class="material-unit-price">¥500 / 個</span>
+            </div>
+            <div class="counter-controls">
+              <button class="cnt-btn dec" data-target="cntGlass">-</button>
+              <input type="number" id="cntGlass" value="0" min="0" max="9999" class="cnt-input buyback-input">
+              <button class="cnt-btn inc" data-target="cntGlass">+</button>
+            </div>
+            <button class="btn-copy-qty" data-target="cntGlass" data-name="ガラス" title="ガラスの個数のみコピー">
+              <span class="btn-icon">📋</span>
+            </button>
+            <div class="material-subtotal" id="subtotalGlass">¥0</div>
+          </div>
+
+          <!-- 8. 銅 (1,000円) -->
+          <div class="material-card">
+            <div class="material-icon">🥉</div>
+            <div class="material-info">
+              <span class="material-name">銅</span>
+              <span class="material-unit-price">¥1,000 / 個</span>
+            </div>
+            <div class="counter-controls">
+              <button class="cnt-btn dec" data-target="cntCopper">-</button>
+              <input type="number" id="cntCopper" value="0" min="0" max="9999" class="cnt-input buyback-input">
+              <button class="cnt-btn inc" data-target="cntCopper">+</button>
+            </div>
+            <button class="btn-copy-qty" data-target="cntCopper" data-name="銅" title="銅の個数のみコピー">
+              <span class="btn-icon">📋</span>
+            </button>
+            <div class="material-subtotal" id="subtotalCopper">¥0</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Sticky Summary Bar -->
+    <footer class="summary-bar">
+      <div class="summary-inner">
+        <!-- Display Totals with Inline Copy Button -->
+        <div class="summary-amount-block">
+          <div class="amounts-grid">
+            <div class="amount-card-inline">
+              <div class="amount-text-group">
+                <span class="main-label">買取合計金額</span>
+                <span id="buybackTotalDisplay" class="total-price">¥0</span>
+              </div>
+              <button id="btnCopyBuybackTotal" class="btn-icon-only primary-copy" title="買取合計金額のみコピー">
+                <span class="btn-icon">📋</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side Copy Action Buttons -->
+        <div class="action-buttons-grid">
+          <!-- 買取明細サマリコピー -->
+          <button id="btnCopyBuybackSummary" class="btn-copy-sub" title="買取内訳明細テキストをコピー">
+            <span class="btn-icon">📄</span>
+            <span class="btn-sub-text">買取明細コピー</span>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+      <span class="toast-icon">✅</span>
+      <span id="toastMsg" class="toast-msg">コピーしました！</span>
+    </div>
+  </div>
+
+  <script src="buyback.js"></script>
+</body>
+</html>
