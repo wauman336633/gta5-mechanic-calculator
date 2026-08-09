@@ -3,13 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Material Price Definitions (1個あたりの買取値段)
   const PRICES = {
     Steel: 1500,     // スチール 1,500円
-    Iron: 2000,      // 鉄 2,000円
+    Iron: 1500,      // 鉄 1,500円
     Scrap: 300,      // 金属スクラップ 300円
     Plastic: 500,    // プラスチック 500円
     Aluminum: 1000,  // アルミニウム 1,000円
     Rubber: 500,     // ゴム 500円
     Glass: 500,      // ガラス 500円
-    Copper: 1000     // 銅 1,000円
+    Copper: 500      // 銅 500円
   };
 
   // State Management
