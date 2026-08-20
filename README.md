@@ -20,16 +20,27 @@
 
 ---
 
-## 🚀 GitHub Pages での公開方法（手順）
+## 🚀 Firebase Hosting 自動公開（自動デプロイ）の手順・仕様
 
-本リポジトリはビルド不要の純粋なHTML/CSS/JavaScriptで構成されているため、数クリックで公開可能です。
+本リポジトリは GitHub Actions を使用して、`main` ブランチ更新時に **Firebase Hosting** へ自動でデプロイされます。
 
-1. このリポジトリを **GitHub** にプッシュします。
-2. GitHubのリポジトリページを開き、上部メニューの **[Settings]** をクリックします。
-3. 左側のサイドメニューから **[Pages]** を選択します。
-4. **Build and deployment** セクションの **Source** を `Deploy from a branch` に設定します。
-5. **Branch** を `main` (または `master`) / `/(root)` に設定し、**[Save]** をクリックします。
-6. 数分待つと、画面上部に公開URL（例: `https://<ユーザー名>.github.io/soragon-mechanic-calculator/`）が表示されます！
+### 初期セットアップ（初回のみ要設定）
+
+Firebase Hosting への自動デプロイを有効にするため、GitHub Secret にサービスアカウントキーを設定します。
+
+1. **Firebase コンソールでサービスアカウントキーを取得**:
+   - [Firebase Console](https://console.firebase.google.com/) > プロジェクト設定 > **[サービス アカウント]** タブを開きます。
+   - **[新しい秘密鍵の生成]** をクリックし、JSON ファイルをダウンロードします。
+2. **GitHub の Repository Secret に登録**:
+   - 本 GitHub リポジトリの **[Settings]** > **[Secrets and variables]** > **[Actions]** を開きます。
+   - **[New repository secret]** をクリックします。
+   - **Name**: `FIREBASE_SERVICE_ACCOUNT_MECHANIC_CALCULATOR`
+   - **Secret**: ダウンロードした JSON ファイルの中身（全文）をそのまま貼り付けて保存します。
+
+### 自動デプロイの仕様
+
+- **`main` ブランチに Push / マージした時**: 自動で Firebase Hosting の本番環境（Live）に即座に反映されます。
+- **Pull Request を作成した時**: 動作確認用の**プレビュー環境 URL** が自動生成され、PR にコメント通知されます。
 
 ---
 
