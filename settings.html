@@ -35,26 +35,17 @@
           ☰
         </button>
         <div id="navMenuDropdown" class="menu-dropdown">
+          <a href="repair.html" class="menu-item">
+            <span class="menu-item-icon">🔧</span>
+            <span>計算機に戻る</span>
+          </a>
           <a href="index.html" class="menu-item">
             <span class="menu-item-icon">🏠</span>
             <span>店舗切替</span>
           </a>
-          <a href="settings.html" class="menu-item">
-            <span class="menu-item-icon">⚙️</span>
-            <span>設定</span>
-          </a>
         </div>
       </div>
     </header>
-
-    <!-- Sub Navigation Tabs (Header直下の右端揃え) -->
-    <div class="sub-nav">
-      <nav class="nav-tabs">
-        <a href="repair.html" class="nav-tab">🔧 修理</a>
-        <a href="custom.html" class="nav-tab">🎨 カスタム</a>
-        <a href="buyback.html" class="nav-tab">📦 買取</a>
-      </nav>
-    </div>
 
     <!-- Passcode Modal (ロック状態) -->
     <div id="modalPasscode" class="modal-overlay">
@@ -79,9 +70,12 @@
     <main id="settingsContent" class="main-grid" style="display: block; opacity: 0.5; pointer-events: none;">
       <form id="formSettings">
         <div class="card" style="padding: 24px; margin-bottom: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800;">⚙️ 価格設定の一括編集</h2>
-            <button type="submit" class="btn-primary" style="font-size: 1.05rem; padding: 12px 24px;">💾 設定を保存する</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <a href="repair.html" class="btn-secondary" style="font-size: 0.95rem; padding: 10px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">✖ 閉じる</a>
+              <button type="submit" class="btn-primary" style="font-size: 1.05rem; padding: 12px 24px;">💾 設定を保存する</button>
+            </div>
           </div>
 
           <!-- Section 1: 修理料金設定 -->
@@ -190,7 +184,8 @@
             </div>
           </div>
 
-          <div style="margin-top: 32px; text-align: right;">
+          <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
+            <a href="repair.html" class="btn-secondary" style="font-size: 0.95rem; padding: 10px 24px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">✖ 閉じる</a>
             <button type="submit" class="btn-primary" style="font-size: 1.05rem; padding: 12px 32px;">💾 設定を保存する</button>
           </div>
         </div>
