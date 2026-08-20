@@ -27,8 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Prices Table
-  const PRICES = {
+  // Prices Table (Dynamic Shop Prices)
+  let PRICES = {
     repairs: {
       full: { shop: 200000, onsite: 300000 },
       engine: { shop: 75000, onsite: 125000 },
@@ -46,6 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
       airSusCtrl: 1000000
     }
   };
+
+  // マルチ店舗データの接続・購読
+  const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+  const currentShopNameEl = document.getElementById('currentShopName');
+
+  if (window.ShopManager) {
+    window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
+      if (currentShopNameEl) currentShopNameEl.textContent = shopInfo.name;
+      if (shopInfo.prices) {
+        if (shopInfo.prices.repairs) PRICES.repairs = shopInfo.prices.repairs;
+        if (shopInfo.prices.repairItems) PRICES.items = shopInfo.prices.repairItems;
+        updateDynamicPriceLabels();
+        calculateTotal();
+      }
+    });
+  }
 
   // DOM Elements
   const btnModeShop = document.getElementById('btnModeShop');
@@ -88,6 +104,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Helper Format Currency
   function formatJPY(num) {
     return '¥' + Math.floor(num).toLocaleString('ja-JP');
+  }
+
+  // Update DOM price labels dynamically
+  function updateDynamicPriceLabels() {
+    const mode = state.mode;
+    if (priceFullRepair) priceFullRepair.textContent = formatJPY(PRICES.repairs.full[mode]);
+    if (priceEngineRepair) priceEngineRepair.textContent = formatJPY(PRICES.repairs.engine[mode]);
+    if (priceBodyRepair) priceBodyRepair.textContent = formatJPY(PRICES.repairs.body[mode]);
   }
 
   // Calculate Total Amount

@@ -1,27 +1,13 @@
 // Renard-Repair Material Buyback Calculator Logic
 document.addEventListener('DOMContentLoaded', () => {
-  // Material Price Definitions (1個あたりの買取値段)
-  const PRICES = {
-    Steel: 1500,     // スチール 1,500円
-    Iron: 1500,      // 鉄 1,500円
-    Scrap: 300,      // 金属スクラップ 300円
-    Plastic: 500,    // プラスチック 500円
-    Aluminum: 1000,  // アルミニウム 1,000円
-    Rubber: 500,     // ゴム 500円
-    Glass: 500,      // ガラス 500円
-    Copper: 500      // 銅 500円
-  };
+  // Material Price Definitions (Dynamic Shop Prices)
+  let PRICES = JSON.parse(JSON.stringify(window.ShopManager ? window.ShopManager.DEFAULT_PRICES.buyback : {
+    Steel: 1500, Iron: 1500, Scrap: 300, Plastic: 500, Aluminum: 1000, Rubber: 500, Glass: 500, Copper: 500
+  }));
 
   // State Management
   const state = {
-    Steel: 0,
-    Iron: 0,
-    Scrap: 0,
-    Plastic: 0,
-    Aluminum: 0,
-    Rubber: 0,
-    Glass: 0,
-    Copper: 0
+    Steel: 0, Iron: 0, Scrap: 0, Plastic: 0, Aluminum: 0, Rubber: 0, Glass: 0, Copper: 0
   };
 
   // DOM Mapping
@@ -35,6 +21,35 @@ document.addEventListener('DOMContentLoaded', () => {
     { key: 'Glass', inputId: 'cntGlass', subtotalId: 'subtotalGlass', name: 'ガラス' },
     { key: 'Copper', inputId: 'cntCopper', subtotalId: 'subtotalCopper', name: '銅' }
   ];
+
+  // マルチ店舗データの接続・購読
+  const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+  const currentShopNameEl = document.getElementById('currentShopName');
+
+  if (window.ShopManager) {
+    window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
+      if (currentShopNameEl) currentShopNameEl.textContent = shopInfo.name;
+      if (shopInfo.prices && shopInfo.prices.buyback) {
+        PRICES = shopInfo.prices.buyback;
+        updateUnitPriceLabels();
+        calculateTotal();
+      }
+    });
+  }
+
+  function updateUnitPriceLabels() {
+    const cards = document.querySelectorAll('.material-card');
+    cards.forEach(card => {
+      const nameEl = card.querySelector('.material-name');
+      const unitEl = card.querySelector('.material-unit-price');
+      if (nameEl && unitEl) {
+        const item = materials.find(m => m.name === nameEl.textContent.trim());
+        if (item && PRICES[item.key] !== undefined) {
+          unitEl.textContent = `¥${PRICES[item.key].toLocaleString('ja-JP')} / 個`;
+        }
+      }
+    });
+  }
 
   const buybackTotalDisplay = document.getElementById('buybackTotalDisplay');
   const btnCopyBuybackTotal = document.getElementById('btnCopyBuybackTotal');

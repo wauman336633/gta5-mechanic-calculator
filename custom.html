@@ -9,10 +9,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <div class="app-container">
-    <!-- Header with 3 Navigation Tabs -->
+    <!-- Header with 3 Navigation Tabs & Shop Utilities -->
     <header class="header">
       <div class="brand">
         <img src="logo.svg" alt="Mechanic Logo" class="brand-logo">
@@ -26,6 +29,14 @@
         <a href="custom.html" class="nav-tab active">🎨 カスタム</a>
         <a href="buyback.html" class="nav-tab">📦 買取</a>
       </nav>
+      <div class="nav-utility">
+        <div class="shop-badge-container">
+          <span>🏢</span>
+          <span class="shop-name-display" id="currentShopName">読み込み中...</span>
+        </div>
+        <a href="settings.html" class="nav-sub-btn" title="価格設定を編集">⚙️ 設定</a>
+        <a href="register.html" class="nav-sub-btn highlight" title="新規メカニック登録">➕ 店舗登録</a>
+      </div>
     </header>
 
     <!-- Top Control Bar -->
@@ -428,6 +439,7 @@
     </div>
   </div>
 
+  <script src="firebase-config.js"></script>
   <script src="custom.js"></script>
 </body>
 </html>

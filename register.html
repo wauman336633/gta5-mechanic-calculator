@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新規メカニック開設 | メカニック計算ツール</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="app-container" style="max-width: 600px; padding-top: 40px;">
+    <header class="header" style="justify-content: center; text-align: center; flex-direction: column; gap: 12px;">
+      <div class="brand">
+        <img src="logo.svg" alt="Mechanic Logo" class="brand-logo">
+        <div class="brand-titles">
+          <h1 class="brand-name">MECHANIC CALCULATOR</h1>
+          <span class="brand-sub">新規メカニック（店舗）開設</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="card" style="padding: 32px; margin-top: 20px;">
+      <h2 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 8px;">➕ 新規メカニック登録</h2>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 24px;">
+        新しいメカニック店舗用の計算機を作成します。登録完了後、専用のアクセスURLが発行されます。
+      </p>
+
+      <form id="formRegister">
+        <div class="form-group">
+          <label class="form-label" for="shopName">メカニック店舗名 <small>(必須)</small></label>
+          <input type="text" id="shopName" class="form-input" placeholder="例: ベニーガレージ" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="shopId">希望店舗ID (英数字) <small>(必須・URLに使用されます)</small></label>
+          <input type="text" id="shopId" class="form-input" placeholder="例: benny-garage" pattern="[a-zA-Z0-9_-]+" title="半角英数字、ハイフン、アンダースコアが使用できます" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="passcode">管理用パスコード <small>(数字や英字)</small></label>
+          <input type="password" id="passcode" class="form-input" placeholder="例: 1234" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="passcodeConfirm">管理用パスコード (確認用)</label>
+          <input type="password" id="passcodeConfirm" class="form-input" placeholder="パスコードを再入力" required>
+        </div>
+
+        <div id="registerError" style="color: #ef4444; font-weight: 700; font-size: 0.9rem; margin-bottom: 16px; display: none;"></div>
+
+        <div class="form-actions" style="justify-content: space-between; align-items: center;">
+          <a href="index.html" class="btn-secondary">キャンセル</a>
+          <button type="submit" id="btnSubmitRegister" class="btn-primary">🚀 店舗を開設する</button>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script src="firebase-config.js"></script>
+  <script src="register.js"></script>
+</body>
+</html>

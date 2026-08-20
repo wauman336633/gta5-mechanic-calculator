@@ -40,17 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Prices Table
-  const PRICES = {
-    repairs: {
-      nosRefill: 400000,
-      nosNew: 500000
-    },
-    exterior: {
-      base: 50000,
-      wheels: 200000,
-      stance: 100000
-    },
+  // Prices Table (Dynamic Shop Prices)
+  let PRICES = JSON.parse(JSON.stringify(window.ShopManager ? window.ShopManager.DEFAULT_PRICES.custom : {
+    repairs: { nosRefill: 400000, nosNew: 500000 },
+    exterior: { base: 50000, wheels: 200000, stance: 100000 },
     performance: {
       engine: [0, 3000000, 5000000, 10000000, 15000000, 25000000],
       brakes: [0, 3000000, 6000000, 8000000],
@@ -58,16 +51,26 @@ document.addEventListener('DOMContentLoaded', () => {
       transmission: [0, 3000000, 5000000, 10000000, 12000000],
       durability: [0, 300000, 500000, 700000],
       turbo: 3000000,
-      antiLag: 10000000,
-      harness: 500000
+      antiLag: 5000000,
+      harness: 1000000
     },
-    items: {
-      ductTape: 50000,
-      carWash: 50000,
-      neonCtrl: 200000,
-      airSusCtrl: 1000000
-    }
-  };
+    items: { ductTape: 50000, carWash: 50000, neonCtrl: 200000, airSusCtrl: 1000000 }
+  }));
+
+  // マルチ店舗データの接続・購読
+  const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+  const currentShopNameEl = document.getElementById('currentShopName');
+
+  if (window.ShopManager) {
+    window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
+      if (currentShopNameEl) currentShopNameEl.textContent = shopInfo.name;
+      if (shopInfo.prices) {
+        if (shopInfo.prices.custom) PRICES = shopInfo.prices.custom;
+        if (shopInfo.prices.repairItems) PRICES.items = shopInfo.prices.repairItems;
+        calculateTotal();
+      }
+    });
+  }
 
   // DOM Elements
   const btnResetCustom = document.getElementById('btnResetCustom');
