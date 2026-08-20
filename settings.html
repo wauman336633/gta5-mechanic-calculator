@@ -15,24 +15,34 @@
 </head>
 <body>
   <div class="app-container">
+    <!-- Header with Shop Brand & Hamburger Menu -->
     <header class="header">
       <div class="brand">
         <img src="logo.svg" alt="Mechanic Logo" class="brand-logo">
         <div class="brand-titles">
           <h1 class="brand-name">MECHANIC CALCULATOR</h1>
-          <span class="brand-sub">価格設定・管理モード</span>
+          <div class="brand-meta">
+            <span class="brand-sub">価格設定・管理モード</span>
+            <div class="brand-shop-badge">
+              <span>🏢</span>
+              <span class="shop-name-display" id="currentShopName">読み込み中...</span>
+            </div>
+          </div>
         </div>
       </div>
-      <nav class="nav-tabs">
-        <a href="repair.html" class="nav-tab">🔧 修理</a>
-        <a href="custom.html" class="nav-tab">🎨 カスタム</a>
-        <a href="buyback.html" class="nav-tab">📦 買取</a>
-      </nav>
-      <div class="nav-utility">
-        <a href="index.html" class="nav-sub-btn" title="ポータル（トップ）へ戻る・店舗切替">🏠 店舗切替</a>
-        <div class="shop-badge-container">
-          <span>🏢</span>
-          <span class="shop-name-display" id="currentShopName">読み込み中...</span>
+      <div class="hamburger-menu-container">
+        <button id="hamburgerBtn" class="hamburger-btn" aria-label="メニューを開く" aria-expanded="false">
+          ☰
+        </button>
+        <div id="navMenuDropdown" class="menu-dropdown">
+          <a href="repair.html" class="menu-item">
+            <span class="menu-item-icon">🔧</span>
+            <span>計算機に戻る</span>
+          </a>
+          <a href="index.html" class="menu-item">
+            <span class="menu-item-icon">🏠</span>
+            <span>店舗切替</span>
+          </a>
         </div>
       </div>
     </header>
@@ -60,9 +70,12 @@
     <main id="settingsContent" class="main-grid" style="display: block; opacity: 0.5; pointer-events: none;">
       <form id="formSettings">
         <div class="card" style="padding: 24px; margin-bottom: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
             <h2 style="font-size: 1.4rem; font-weight: 800;">⚙️ 価格設定の一括編集</h2>
-            <button type="submit" class="btn-primary" style="font-size: 1.05rem; padding: 12px 24px;">💾 設定を保存する</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <a href="repair.html" class="btn-secondary" style="font-size: 0.95rem; padding: 10px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">✖ 閉じる</a>
+              <button type="submit" class="btn-primary" style="font-size: 1.05rem; padding: 12px 24px;">💾 設定を保存する</button>
+            </div>
           </div>
 
           <!-- Section 1: 修理料金設定 -->
@@ -171,7 +184,8 @@
             </div>
           </div>
 
-          <div style="margin-top: 32px; text-align: right;">
+          <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
+            <a href="repair.html" class="btn-secondary" style="font-size: 0.95rem; padding: 10px 24px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">✖ 閉じる</a>
             <button type="submit" class="btn-primary" style="font-size: 1.05rem; padding: 12px 32px;">💾 設定を保存する</button>
           </div>
         </div>
@@ -185,6 +199,7 @@
   </div>
 
   <script src="firebase-config.js"></script>
+  <script src="common.js"></script>
   <script src="settings.js"></script>
 </body>
 </html>
