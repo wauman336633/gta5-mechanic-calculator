@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await window.ShopManager.createShop(shopId, shopName, passcode);
       alert(`「${shopName}」の計算機を開設しました！\n専用URL: ?shop=${shopId}`);
-      window.location.href = `index.html?shop=${encodeURIComponent(shopId)}`;
+      window.location.href = `repair.html?shop=${encodeURIComponent(shopId)}`;
     } catch (err) {
       showError(err.message || "店舗の作成に失敗しました。");
       btnSubmit.disabled = false;

@@ -280,13 +280,77 @@ async function verifyShopPasscode(shopId, passcode) {
   }
 }
 
+// 7. 店舗アクセス履歴管理
+const HISTORY_KEY = 'mechanic_shop_history';
+
+function getShopHistory() {
+  const data = localStorage.getItem(HISTORY_KEY);
+  if (data) {
+    try {
+      const history = JSON.parse(data);
+      if (Array.isArray(history) && history.length > 0) {
+        return history;
+      }
+    } catch (e) {
+      console.error("History parse error", e);
+    }
+  }
+  // デフォルト（初回訪問時）：サンプル店舗
+  return [
+    { id: 'sample', name: 'サンプル店舗', lastAccessedAt: new Date().toISOString() }
+  ];
+}
+
+function addShopToHistory(shopId, shopName) {
+  if (!shopId) return;
+  const cleanId = shopId.toLowerCase().trim();
+  const history = getShopHistory();
+
+  // 'sample' は実際の履歴が追加されたら履歴リストから除外可能
+  const filtered = history.filter(item => item.id !== cleanId && item.id !== 'sample');
+  
+  const newItem = {
+    id: cleanId,
+    name: shopName || cleanId.toUpperCase(),
+    lastAccessedAt: new Date().toISOString()
+  };
+
+  filtered.unshift(newItem);
+  // 最大10件まで保持
+  const updatedHistory = filtered.slice(0, 10);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
+  return updatedHistory;
+}
+
+function removeShopFromHistory(shopId) {
+  if (!shopId) return;
+  const cleanId = shopId.toLowerCase().trim();
+  let history = getShopHistory();
+  history = history.filter(item => item.id !== cleanId);
+  if (history.length === 0) {
+    history = [{ id: 'sample', name: 'サンプル店舗', lastAccessedAt: new Date().toISOString() }];
+  }
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  return history;
+}
+
 // グローバル公開
 window.ShopManager = {
   DEFAULT_PRICES,
   getShopId,
   setShopId,
-  subscribeShopPrices,
+  subscribeShopPrices: function(shopId, callback) {
+    return subscribeShopPrices(shopId, (shopInfo) => {
+      if (shopInfo && shopInfo.id) {
+        addShopToHistory(shopInfo.id, shopInfo.name);
+      }
+      callback(shopInfo);
+    });
+  },
   createShop,
   updateShopPrices,
-  verifyShopPasscode
+  verifyShopPasscode,
+  getShopHistory,
+  addShopToHistory,
+  removeShopFromHistory
 };

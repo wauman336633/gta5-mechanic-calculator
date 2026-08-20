@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>修理 | メカニック計算ツール</title>
+  <meta name="description" content="メカニック専用の自動車修理料金計算ツール">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with 3 Navigation Tabs & Shop Utilities -->
+    <header class="header">
+      <div class="brand">
+        <img src="logo.svg" alt="Mechanic Logo" class="brand-logo">
+        <div class="brand-titles">
+          <h1 class="brand-name">MECHANIC CALCULATOR</h1>
+          <span class="brand-sub">修理計算モード</span>
+        </div>
+      </div>
+      <nav class="nav-tabs">
+        <a href="repair.html" class="nav-tab active">🔧 修理</a>
+        <a href="custom.html" class="nav-tab">🎨 カスタム</a>
+        <a href="buyback.html" class="nav-tab">📦 買取</a>
+      </nav>
+      <div class="nav-utility">
+        <a href="index.html" class="nav-sub-btn" title="ポータル（トップ）へ戻る・店舗切替">🏠 店舗切替</a>
+        <div class="shop-badge-container">
+          <span>🏢</span>
+          <span class="shop-name-display" id="currentShopName">読み込み中...</span>
+        </div>
+        <a href="settings.html" class="nav-sub-btn" title="価格設定を編集">⚙️ 設定</a>
+        <a href="register.html" class="nav-sub-btn highlight" title="新規メカニック登録">➕ 店舗登録</a>
+      </div>
+    </header>
+
+    <!-- Top Control Bar (Mode Switch & Global Actions) -->
+    <section class="control-bar">
+      <div class="mode-switch-container">
+        <span class="mode-label">作業場所:</span>
+        <div class="mode-toggle-group">
+          <button id="btnModeShop" class="mode-btn active" data-mode="shop">
+            <span class="icon">🏪</span> 店内
+          </button>
+          <button id="btnModeOnsite" class="mode-btn" data-mode="onsite">
+            <span class="icon">🛻</span> 出張
+          </button>
+        </div>
+      </div>
+
+      <div class="option-check-group">
+        <label class="checkbox-card" id="aircraftLabel">
+          <input type="checkbox" id="chkAircraft">
+          <span class="checkbox-custom"></span>
+          <span class="label-text">✈️ 航空機・船 <small>(+¥100,000)</small></span>
+        </label>
+      </div>
+
+      <button id="btnResetRepair" class="reset-btn" title="すべての選択を初期化">
+        <span class="icon">🔄</span> 一括リセット
+      </button>
+    </section>
+
+    <!-- Main Grid Content (Repair Page) -->
+    <main class="main-grid">
+      <!-- Section 1: 修理・基本作業 (左カラム) -->
+      <div class="card category-card">
+        <div class="card-header">
+          <h2 class="card-title">🔧 修理・基本作業</h2>
+          <span class="mode-indicator-tag" id="modeTag">店内料金適用中</span>
+        </div>
+        <div class="card-body">
+          <!-- 全修理 -->
+          <div class="item-row toggle-item">
+            <label class="toggle-card" for="chkFullRepair">
+              <input type="checkbox" id="chkFullRepair">
+              <div class="toggle-content">
+                <span class="item-name">全修理</span>
+                <span class="item-price" id="priceFullRepair">¥200,000</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="row-divider">または部位別</div>
+
+          <!-- エンジン -->
+          <div class="item-row toggle-item">
+            <label class="toggle-card" for="chkEngineRepair">
+              <input type="checkbox" id="chkEngineRepair">
+              <div class="toggle-content">
+                <span class="item-name">エンジン修理</span>
+                <span class="item-price" id="priceEngineRepair">¥75,000</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- ボディ -->
+          <div class="item-row toggle-item">
+            <label class="toggle-card" for="chkBodyRepair">
+              <input type="checkbox" id="chkBodyRepair">
+              <div class="toggle-content">
+                <span class="item-name">ボディ修理</span>
+                <span class="item-price" id="priceBodyRepair">¥75,000</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="row-divider">劣化パーツ交換 (各 ¥10,000)</div>
+
+          <!-- 劣化パーツ (5種類) -->
+          <div class="item-row toggle-item">
+            <label class="toggle-card" for="chkOilPump">
+              <input type="checkbox" id="chkOilPump">
+              <div class="toggle-content">
+                <span class="item-name">オイルポンプ</span>
+                <span class="item-price">¥10,000</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="item-row toggle-item">
+            <label class="toggle-card" for="chkBattery">
+              <input type="checkbox" id="chkBattery">
+              <div class="toggle-content">
+                <span class="item-name">バッテリー</span>
+                <span class="item-price">¥10,000</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="item-row toggle-item">
+            <label class="toggle-card" for="chkFuelTank">
+              <input type="checkbox" id="chkFuelTank">
+              <div class="toggle-content">
+                <span class="item-name">燃料タンク</span>
+                <span class="item-price">¥10,000</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="item-row toggle-item">
+            <label class="toggle-card" for="chkDriveShaft">
+              <input type="checkbox" id="chkDriveShaft">
+              <div class="toggle-content">
+                <span class="item-name">ドライブシャフト</span>
+                <span class="item-price">¥10,000</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="item-row toggle-item">
+            <label class="toggle-card" for="chkCylinder">
+              <input type="checkbox" id="chkCylinder">
+              <div class="toggle-content">
+                <span class="item-name">シリンダー</span>
+                <span class="item-price">¥10,000</span>
+              </div>
+            </label>
+          </div>
+
+          <div class="row-divider">タイヤ</div>
+
+          <!-- タイヤ交換 (1~4本) -->
+          <div class="level-select-group" data-key="tires">
+            <div class="level-header">
+              <span class="item-name">タイヤ交換 <small style="color: var(--text-secondary); font-weight: normal;">(1本 ¥100,000)</small></span>
+              <span class="level-selected-price" id="priceTiresDisplay">未選択</span>
+            </div>
+            <div class="level-buttons" id="groupTires">
+              <button class="lvl-btn" data-qty="1">1本</button>
+              <button class="lvl-btn" data-qty="2">2本</button>
+              <button class="lvl-btn" data-qty="3">3本</button>
+              <button class="lvl-btn" data-qty="4">4本</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: NOS ＆ 販売品 (右カラム) -->
+      <div class="right-column-group">
+        <!-- NOS -->
+        <div class="card category-card">
+          <div class="card-header">
+            <h2 class="card-title">🚀 NOS</h2>
+          </div>
+          <div class="card-body">
+            <!-- NOS補充 (数量入力) -->
+            <div class="item-row counter-item">
+              <div class="counter-info">
+                <span class="item-name">NOS補充</span>
+                <span class="item-unit-price">¥400,000</span>
+              </div>
+              <div class="counter-controls">
+                <button class="cnt-btn dec" data-target="cntNosRefill">-</button>
+                <input type="number" id="cntNosRefill" value="0" min="0" max="10" class="cnt-input">
+                <button class="cnt-btn inc" data-target="cntNosRefill">+</button>
+              </div>
+            </div>
+
+            <!-- NOS新規 (数量入力) -->
+            <div class="item-row counter-item">
+              <div class="counter-info">
+                <span class="item-name">NOS新規</span>
+                <span class="item-unit-price">¥500,000</span>
+              </div>
+              <div class="counter-controls">
+                <button class="cnt-btn dec" data-target="cntNosNew">-</button>
+                <input type="number" id="cntNosNew" value="0" min="0" max="10" class="cnt-input">
+                <button class="cnt-btn inc" data-target="cntNosNew">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 販売品・アクセサリー -->
+        <div class="card category-card">
+          <div class="card-header">
+            <h2 class="card-title">📦 販売品・アクセサリー</h2>
+          </div>
+          <div class="card-body">
+            <div class="item-row counter-item">
+              <div class="counter-info">
+                <span class="item-name">ダクトテープ</span>
+                <span class="item-unit-price">¥50,000</span>
+              </div>
+              <div class="counter-controls">
+                <button class="cnt-btn dec" data-target="cntDuctTape">-</button>
+                <input type="number" id="cntDuctTape" value="0" min="0" max="50" class="cnt-input">
+                <button class="cnt-btn inc" data-target="cntDuctTape">+</button>
+              </div>
+            </div>
+
+            <div class="item-row counter-item">
+              <div class="counter-info">
+                <span class="item-name">洗車キット</span>
+                <span class="item-unit-price">¥50,000</span>
+              </div>
+              <div class="counter-controls">
+                <button class="cnt-btn dec" data-target="cntCarWash">-</button>
+                <input type="number" id="cntCarWash" value="0" min="0" max="50" class="cnt-input">
+                <button class="cnt-btn inc" data-target="cntCarWash">+</button>
+              </div>
+            </div>
+
+            <div class="item-row counter-item">
+              <div class="counter-info">
+                <span class="item-name">ネオンコントローラー</span>
+                <span class="item-unit-price">¥200,000</span>
+              </div>
+              <div class="counter-controls">
+                <button class="cnt-btn dec" data-target="cntNeonCtrl">-</button>
+                <input type="number" id="cntNeonCtrl" value="0" min="0" max="15" class="cnt-input">
+                <button class="cnt-btn inc" data-target="cntNeonCtrl">+</button>
+              </div>
+            </div>
+
+            <div class="item-row counter-item">
+              <div class="counter-info">
+                <span class="item-name">エアサスコントローラー</span>
+                <span class="item-unit-price">¥1,000,000</span>
+              </div>
+              <div class="counter-controls">
+                <button class="cnt-btn dec" data-target="cntAirSusCtrl">-</button>
+                <input type="number" id="cntAirSusCtrl" value="0" min="0" max="15" class="cnt-input">
+                <button class="cnt-btn inc" data-target="cntAirSusCtrl">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Sticky Summary & Action Bar (Repair Page) -->
+    <footer class="summary-bar">
+      <div class="summary-inner">
+        <!-- Display Totals with Inline Copy Button -->
+        <div class="summary-amount-block">
+          <div class="amounts-grid">
+            <div class="amount-card-inline">
+              <div class="amount-text-group">
+                <span class="main-label">修理請求額</span>
+                <span id="repairTotalDisplay" class="total-price">¥0</span>
+              </div>
+              <button id="btnCopyRepairTotal" class="btn-icon-only primary-copy" title="請求額の数値のみコピー">
+                <span class="btn-icon">📋</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side Copy Action Buttons -->
+        <div class="action-buttons-grid">
+          <button id="btnCopyRepairSummary" class="btn-copy-sub" title="修理作業内容サマリをコピー">
+            <span class="btn-icon">📄</span>
+            <span class="btn-sub-text">内容サマリ</span>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+      <span class="toast-icon">✅</span>
+      <span id="toastMsg" class="toast-msg">コピーしました！</span>
+    </div>
+  </div>
+
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

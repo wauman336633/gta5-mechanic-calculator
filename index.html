@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>修理 | メカニック計算ツール</title>
-  <meta name="description" content="メカニック専用の自動車修理料金計算ツール">
+  <title>メカニック計算ツール | ロールプレイ・GTA系メカニック専用 ポータル</title>
+  <meta name="description" content="メカニック専用の自動車修理・カスタム・買取料金計算ツール。店舗ごとの独自価格設定とアクセス履歴からスムーズ計算。">
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,304 +13,183 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
-<body>
-  <div class="app-container">
-    <!-- Header with 3 Navigation Tabs & Shop Utilities -->
-    <header class="header">
+<body class="portal-body">
+  <div class="app-container portal-container">
+    <!-- Portal Header -->
+    <header class="header portal-header">
       <div class="brand">
         <img src="logo.svg" alt="Mechanic Logo" class="brand-logo">
         <div class="brand-titles">
           <h1 class="brand-name">MECHANIC CALCULATOR</h1>
-          <span class="brand-sub">修理計算モード</span>
+          <span class="brand-sub">ポータル ＆ サービス紹介</span>
         </div>
       </div>
-      <nav class="nav-tabs">
-        <a href="index.html" class="nav-tab active">🔧 修理</a>
-        <a href="custom.html" class="nav-tab">🎨 カスタム</a>
-        <a href="buyback.html" class="nav-tab">📦 買取</a>
-      </nav>
       <div class="nav-utility">
-        <div class="shop-badge-container">
-          <span>🏢</span>
-          <span class="shop-name-display" id="currentShopName">読み込み中...</span>
-        </div>
-        <a href="settings.html" class="nav-sub-btn" title="価格設定を編集">⚙️ 設定</a>
-        <a href="register.html" class="nav-sub-btn highlight" title="新規メカニック登録">➕ 店舗登録</a>
+        <a href="register.html" class="nav-sub-btn highlight" title="新規メカニック店舗を開設">➕ 新しく店舗を作る</a>
       </div>
     </header>
 
-    <!-- Top Control Bar (Mode Switch & Global Actions) -->
-    <section class="control-bar">
-      <div class="mode-switch-container">
-        <span class="mode-label">作業場所:</span>
-        <div class="mode-toggle-group">
-          <button id="btnModeShop" class="mode-btn active" data-mode="shop">
-            <span class="icon">🏪</span> 店内
-          </button>
-          <button id="btnModeOnsite" class="mode-btn" data-mode="onsite">
-            <span class="icon">🛻</span> 出張
-          </button>
-        </div>
-      </div>
+    <!-- Hero Banner Section -->
+    <section class="portal-hero">
+      <div class="hero-badge">AUTOMOTIVE MECHANIC CALCULATOR</div>
+      <h2 class="hero-title">ロールプレイ・GTA系メカニック専用<br><span class="highlight-text">爆速料金計算ポータル</span></h2>
+      <p class="hero-desc">
+        修理・カスタム・買取の料金をワンタップでスマート計算。<br>
+        店舗独自の価格設定をオンラインで保持・チーム内でリアルタイム共有できます。
+      </p>
 
-      <div class="option-check-group">
-        <label class="checkbox-card" id="aircraftLabel">
-          <input type="checkbox" id="chkAircraft">
-          <span class="checkbox-custom"></span>
-          <span class="label-text">✈️ 航空機・船 <small>(+¥100,000)</small></span>
-        </label>
+      <div class="hero-cta-group">
+        <a href="register.html" class="btn-hero-primary">
+          <span class="icon">🚀</span> 新しく店舗を作る
+        </a>
       </div>
-
-      <button id="btnResetRepair" class="reset-btn" title="すべての選択を初期化">
-        <span class="icon">🔄</span> 一括リセット
-      </button>
     </section>
 
-    <!-- Main Grid Content (Repair Page) -->
-    <main class="main-grid">
-      <!-- Section 1: 修理・基本作業 (左カラム) -->
-      <div class="card category-card">
-        <div class="card-header">
-          <h2 class="card-title">🔧 修理・基本作業</h2>
-          <span class="mode-indicator-tag" id="modeTag">店内料金適用中</span>
-        </div>
-        <div class="card-body">
-          <!-- 全修理 -->
-          <div class="item-row toggle-item">
-            <label class="toggle-card" for="chkFullRepair">
-              <input type="checkbox" id="chkFullRepair">
-              <div class="toggle-content">
-                <span class="item-name">全修理</span>
-                <span class="item-price" id="priceFullRepair">¥200,000</span>
-              </div>
-            </label>
-          </div>
+    <!-- Shop Selection & Access Section -->
+    <section class="portal-section shop-access-section">
+      <div class="section-title-wrap">
+        <h3 class="section-title">🏢 店舗を選んで計算機を開く</h3>
+        <p class="section-sub">過去にアクセスした店舗の履歴、または店舗IDを指定してアクセスします。</p>
+      </div>
 
-          <div class="row-divider">または部位別</div>
-
-          <!-- エンジン -->
-          <div class="item-row toggle-item">
-            <label class="toggle-card" for="chkEngineRepair">
-              <input type="checkbox" id="chkEngineRepair">
-              <div class="toggle-content">
-                <span class="item-name">エンジン修理</span>
-                <span class="item-price" id="priceEngineRepair">¥75,000</span>
-              </div>
-            </label>
-          </div>
-
-          <!-- ボディ -->
-          <div class="item-row toggle-item">
-            <label class="toggle-card" for="chkBodyRepair">
-              <input type="checkbox" id="chkBodyRepair">
-              <div class="toggle-content">
-                <span class="item-name">ボディ修理</span>
-                <span class="item-price" id="priceBodyRepair">¥75,000</span>
-              </div>
-            </label>
-          </div>
-
-          <div class="row-divider">劣化パーツ交換 (各 ¥10,000)</div>
-
-          <!-- 劣化パーツ (5種類) -->
-          <div class="item-row toggle-item">
-            <label class="toggle-card" for="chkOilPump">
-              <input type="checkbox" id="chkOilPump">
-              <div class="toggle-content">
-                <span class="item-name">オイルポンプ</span>
-                <span class="item-price">¥10,000</span>
-              </div>
-            </label>
-          </div>
-
-          <div class="item-row toggle-item">
-            <label class="toggle-card" for="chkBattery">
-              <input type="checkbox" id="chkBattery">
-              <div class="toggle-content">
-                <span class="item-name">バッテリー</span>
-                <span class="item-price">¥10,000</span>
-              </div>
-            </label>
-          </div>
-
-          <div class="item-row toggle-item">
-            <label class="toggle-card" for="chkFuelTank">
-              <input type="checkbox" id="chkFuelTank">
-              <div class="toggle-content">
-                <span class="item-name">燃料タンク</span>
-                <span class="item-price">¥10,000</span>
-              </div>
-            </label>
-          </div>
-
-          <div class="item-row toggle-item">
-            <label class="toggle-card" for="chkDriveShaft">
-              <input type="checkbox" id="chkDriveShaft">
-              <div class="toggle-content">
-                <span class="item-name">ドライブシャフト</span>
-                <span class="item-price">¥10,000</span>
-              </div>
-            </label>
-          </div>
-
-          <div class="item-row toggle-item">
-            <label class="toggle-card" for="chkCylinder">
-              <input type="checkbox" id="chkCylinder">
-              <div class="toggle-content">
-                <span class="item-name">シリンダー</span>
-                <span class="item-price">¥10,000</span>
-              </div>
-            </label>
-          </div>
-
-          <div class="row-divider">タイヤ</div>
-
-          <!-- タイヤ交換 (1~4本) -->
-          <div class="level-select-group" data-key="tires">
-            <div class="level-header">
-              <span class="item-name">タイヤ交換 <small style="color: var(--text-secondary); font-weight: normal;">(1本 ¥100,000)</small></span>
-              <span class="level-selected-price" id="priceTiresDisplay">未選択</span>
-            </div>
-            <div class="level-buttons" id="groupTires">
-              <button class="lvl-btn" data-qty="1">1本</button>
-              <button class="lvl-btn" data-qty="2">2本</button>
-              <button class="lvl-btn" data-qty="3">3本</button>
-              <button class="lvl-btn" data-qty="4">4本</button>
-            </div>
-          </div>
+      <!-- Access History Cards -->
+      <div class="history-block">
+        <h4 class="history-block-title">⏱️ 過去のアクセス履歴</h4>
+        <div id="historyGrid" class="history-grid">
+          <!-- JSでアクセス履歴カードを動的読み込み -->
         </div>
       </div>
 
-      <!-- Section 2: NOS ＆ 販売品 (右カラム) -->
-      <div class="right-column-group">
-        <!-- NOS -->
-        <div class="card category-card">
-          <div class="card-header">
-            <h2 class="card-title">🚀 NOS</h2>
-          </div>
-          <div class="card-body">
-            <!-- NOS補充 (数量入力) -->
-            <div class="item-row counter-item">
-              <div class="counter-info">
-                <span class="item-name">NOS補充</span>
-                <span class="item-unit-price">¥400,000</span>
-              </div>
-              <div class="counter-controls">
-                <button class="cnt-btn dec" data-target="cntNosRefill">-</button>
-                <input type="number" id="cntNosRefill" value="0" min="0" max="10" class="cnt-input">
-                <button class="cnt-btn inc" data-target="cntNosRefill">+</button>
-              </div>
-            </div>
+      <!-- Direct ID Access Form -->
+      <div class="direct-access-card">
+        <h4 class="direct-title">🔑 店舗IDを直接指定して入る</h4>
+        <p class="direct-desc">履歴にない既存店舗のID（英数字）を入力してください。</p>
+        <form id="formDirectAccess" class="direct-form">
+          <input type="text" id="directShopId" class="form-input direct-input" placeholder="例: sample" pattern="[a-zA-Z0-9_-]+" required>
+          <button type="submit" class="btn-primary direct-btn">計算機を開く ➔</button>
+        </form>
+      </div>
+    </section>
 
-            <!-- NOS新規 (数量入力) -->
-            <div class="item-row counter-item">
-              <div class="counter-info">
-                <span class="item-name">NOS新規</span>
-                <span class="item-unit-price">¥500,000</span>
-              </div>
-              <div class="counter-controls">
-                <button class="cnt-btn dec" data-target="cntNosNew">-</button>
-                <input type="number" id="cntNosNew" value="0" min="0" max="10" class="cnt-input">
-                <button class="cnt-btn inc" data-target="cntNosNew">+</button>
-              </div>
-            </div>
-          </div>
+    <!-- Features / What You Can Do Section -->
+    <section class="portal-section features-section">
+      <div class="section-title-wrap">
+        <h3 class="section-title">✨ メカニック計算ツールでできること</h3>
+        <p class="section-sub">メカニック業務の効率を最大化する多彩な機能を備えています。</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1: 修理計算 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">🔧</div>
+          <h4 class="feature-title">修理料金計算</h4>
+          <p class="feature-desc">
+            店内/出張モードの切り替え、全修理・部位別修理・劣化パーツ5種・タイヤ・NOS補充などの料金を自動計算。お客様への請求金額テキストをワンクリックでコピーできます。
+          </p>
         </div>
 
-        <!-- 販売品・アクセサリー -->
-        <div class="card category-card">
-          <div class="card-header">
-            <h2 class="card-title">📦 販売品・アクセサリー</h2>
-          </div>
-          <div class="card-body">
-            <div class="item-row counter-item">
-              <div class="counter-info">
-                <span class="item-name">ダクトテープ</span>
-                <span class="item-unit-price">¥50,000</span>
-              </div>
-              <div class="counter-controls">
-                <button class="cnt-btn dec" data-target="cntDuctTape">-</button>
-                <input type="number" id="cntDuctTape" value="0" min="0" max="50" class="cnt-input">
-                <button class="cnt-btn inc" data-target="cntDuctTape">+</button>
-              </div>
-            </div>
+        <!-- Feature 2: カスタム計算 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">🎨</div>
+          <h4 class="feature-title">カスタム料金計算</h4>
+          <p class="feature-desc">
+            外装カスタム（ベース・ホイール・車高）やパフォーマンスパーツ（エンジン・ブレーキ・サスペンション・ミッション・耐久・ターボ等）の段階別料金を一括計算します。
+          </p>
+        </div>
 
-            <div class="item-row counter-item">
-              <div class="counter-info">
-                <span class="item-name">洗車キット</span>
-                <span class="item-unit-price">¥50,000</span>
-              </div>
-              <div class="counter-controls">
-                <button class="cnt-btn dec" data-target="cntCarWash">-</button>
-                <input type="number" id="cntCarWash" value="0" min="0" max="50" class="cnt-input">
-                <button class="cnt-btn inc" data-target="cntCarWash">+</button>
-              </div>
-            </div>
+        <!-- Feature 3: 買取計算 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">📦</div>
+          <h4 class="feature-title">買取料金計算</h4>
+          <p class="feature-desc">
+            鉄、鋼鉄、スクラップ、プラスチック、アルミニウム、ゴム、ガラス、銅などの各種素材の個数を入力するだけで、買取総額を瞬時に算出します。
+          </p>
+        </div>
 
-            <div class="item-row counter-item">
-              <div class="counter-info">
-                <span class="item-name">ネオンコントローラー</span>
-                <span class="item-unit-price">¥200,000</span>
-              </div>
-              <div class="counter-controls">
-                <button class="cnt-btn dec" data-target="cntNeonCtrl">-</button>
-                <input type="number" id="cntNeonCtrl" value="0" min="0" max="15" class="cnt-input">
-                <button class="cnt-btn inc" data-target="cntNeonCtrl">+</button>
-              </div>
-            </div>
-
-            <div class="item-row counter-item">
-              <div class="counter-info">
-                <span class="item-name">エアサスコントローラー</span>
-                <span class="item-unit-price">¥1,000,000</span>
-              </div>
-              <div class="counter-controls">
-                <button class="cnt-btn dec" data-target="cntAirSusCtrl">-</button>
-                <input type="number" id="cntAirSusCtrl" value="0" min="0" max="15" class="cnt-input">
-                <button class="cnt-btn inc" data-target="cntAirSusCtrl">+</button>
-              </div>
-            </div>
-          </div>
+        <!-- Feature 4: 店舗価格カスタマイズ -->
+        <div class="feature-card">
+          <div class="feature-icon-box">⚙️</div>
+          <h4 class="feature-title">独自価格設定・クラウド共有</h4>
+          <p class="feature-desc">
+            店舗ごとの管理パスコードを設定し、自店舗オリジナルの料金表を作成・保存。クラウド同期により、同僚のメカニック全員が常に最新の価格設定で計算を行えます。
+          </p>
         </div>
       </div>
-    </main>
+    </section>
 
-    <!-- Bottom Sticky Summary & Action Bar (Repair Page) -->
-    <footer class="summary-bar">
-      <div class="summary-inner">
-        <!-- Display Totals with Inline Copy Button -->
-        <div class="summary-amount-block">
-          <div class="amounts-grid">
-            <div class="amount-card-inline">
-              <div class="amount-text-group">
-                <span class="main-label">修理請求額</span>
-                <span id="repairTotalDisplay" class="total-price">¥0</span>
-              </div>
-              <button id="btnCopyRepairTotal" class="btn-icon-only primary-copy" title="請求額の数値のみコピー">
-                <span class="btn-icon">📋</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Side Copy Action Buttons -->
-        <div class="action-buttons-grid">
-          <button id="btnCopyRepairSummary" class="btn-copy-sub" title="修理作業内容サマリをコピー">
-            <span class="btn-icon">📄</span>
-            <span class="btn-sub-text">内容サマリ</span>
-          </button>
-        </div>
-      </div>
+    <!-- Footer -->
+    <footer class="portal-footer">
+      <p>&copy; MECHANIC CALCULATOR Portal. All rights reserved.</p>
     </footer>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="toast hidden">
-      <span class="toast-icon">✅</span>
-      <span id="toastMsg" class="toast-msg">コピーしました！</span>
-    </div>
   </div>
 
   <script src="firebase-config.js"></script>
-  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const historyGrid = document.getElementById('historyGrid');
+      const formDirectAccess = document.getElementById('formDirectAccess');
+      const directShopId = document.getElementById('directShopId');
+
+      function renderHistory() {
+        if (!window.ShopManager) return;
+        const history = window.ShopManager.getShopHistory();
+
+        if (!history || history.length === 0) {
+          historyGrid.innerHTML = '<p class="no-history-msg">アクセス履歴はまだありません。</p>';
+          return;
+        }
+
+        historyGrid.innerHTML = history.map(item => {
+          const dateStr = item.lastAccessedAt ? new Date(item.lastAccessedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+          const isSample = item.id === 'sample';
+          return `
+            <div class="history-card ${isSample ? 'sample-card' : ''}">
+              <div class="history-card-header">
+                <span class="history-shop-badge">${isSample ? '🔰 サンプル店舗' : '🏢 店舗'}</span>
+                ${dateStr ? `<span class="history-date">${dateStr}</span>` : ''}
+              </div>
+              <div class="history-shop-name">${item.name}</div>
+              <div class="history-shop-id">ID: <code>${item.id}</code></div>
+              <div class="history-card-actions">
+                <a href="repair.html?shop=${encodeURIComponent(item.id)}" class="btn-open-shop">
+                  計算機を開く ➔
+                </a>
+                ${!isSample ? `
+                  <button type="button" class="btn-remove-history" data-id="${item.id}" title="履歴から削除">
+                    🗑️
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // 削除ボタンのイベントハンドラ登録
+        document.querySelectorAll('.btn-remove-history').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const shopId = btn.getAttribute('data-id');
+            if (shopId && window.ShopManager) {
+              window.ShopManager.removeShopFromHistory(shopId);
+              renderHistory();
+            }
+          });
+        });
+      }
+
+      renderHistory();
+
+      // 直接アクセスフォームの処理
+      if (formDirectAccess) {
+        formDirectAccess.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const targetId = directShopId.value.trim().toLowerCase();
+          if (targetId) {
+            window.location.href = `repair.html?shop=${encodeURIComponent(targetId)}`;
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
