@@ -154,9 +154,180 @@ const AppCommon = {
     });
   },
 
-  // 7. 共通UI初期化
+  // 7. フィードバック（不具合・要望）モーダル制御
+  initFeedbackModal() {
+    // 既存モーダルがなければ動的に生成してbodyに追加
+    let modal = document.getElementById('modalFeedback');
+    if (!modal) {
+      const modalHtml = `
+        <div id="modalFeedback" class="feedback-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
+          <div class="feedback-modal-card">
+            <div class="feedback-modal-header">
+              <h3 id="feedbackModalTitle" class="feedback-modal-title">💬 不具合報告・ご要望</h3>
+              <button type="button" id="feedbackModalCloseBtn" class="feedback-modal-close" aria-label="閉じる">&times;</button>
+            </div>
+            <form id="formFeedback" class="feedback-form">
+              <div class="feedback-form-group">
+                <label class="feedback-label">種別 <span class="required-badge">必須</span></label>
+                <div class="feedback-type-selector">
+                  <label class="feedback-type-option">
+                    <input type="radio" name="feedbackType" value="bug" checked>
+                    <span class="type-badge bug">🐛 不具合報告</span>
+                  </label>
+                  <label class="feedback-type-option">
+                    <input type="radio" name="feedbackType" value="feature">
+                    <span class="type-badge feature">💡 機能・要望</span>
+                  </label>
+                  <label class="feedback-type-option">
+                    <input type="radio" name="feedbackType" value="other">
+                    <span class="type-badge other">❓ その他</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="feedback-form-group">
+                <label for="txtFeedbackContent" class="feedback-label">内容 <span class="required-badge">必須</span></label>
+                <textarea id="txtFeedbackContent" class="feedback-textarea" rows="4" placeholder="不具合の状況（何をしていてどうなったか）や、追加してほしい機能・改善点をご記入ください。" required></textarea>
+              </div>
+
+              <div id="feedbackContextInfo" class="feedback-context-info">
+                <span>📍 画面: <strong id="feedbackCurrentPage"></strong></span>
+                <span>🏢 店舗: <strong id="feedbackCurrentShop"></strong></span>
+              </div>
+
+              <div id="feedbackErrorMsg" class="feedback-error hidden"></div>
+
+              <div class="feedback-modal-actions">
+                <button type="button" id="feedbackCancelBtn" class="btn-secondary">キャンセル</button>
+                <button type="submit" id="feedbackSubmitBtn" class="btn-primary">
+                  <span id="feedbackSubmitText">送信する</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      modal = document.getElementById('modalFeedback');
+    }
+
+    const openBtns = [document.getElementById('menuFeedback'), document.getElementById('btnOpenFeedback')].filter(Boolean);
+    const closeBtn = document.getElementById('feedbackModalCloseBtn');
+    const cancelBtn = document.getElementById('feedbackCancelBtn');
+    const form = document.getElementById('formFeedback');
+    const txtContent = document.getElementById('txtFeedbackContent');
+    const errorMsg = document.getElementById('feedbackErrorMsg');
+    const submitBtn = document.getElementById('feedbackSubmitBtn');
+    const submitText = document.getElementById('feedbackSubmitText');
+    const pageDisplay = document.getElementById('feedbackCurrentPage');
+    const shopDisplay = document.getElementById('feedbackCurrentShop');
+
+    const openModal = () => {
+      const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+      const shopNameEl = document.getElementById('currentShopName');
+      const shopName = shopNameEl ? shopNameEl.textContent : shopId;
+
+      if (pageDisplay) pageDisplay.textContent = document.title.split('|')[0].trim() || window.location.pathname.split('/').pop();
+      if (shopDisplay) shopDisplay.textContent = `${shopName} (${shopId})`;
+      if (errorMsg) errorMsg.classList.add('hidden');
+      if (txtContent) txtContent.value = '';
+
+      modal.classList.remove('hidden');
+      if (txtContent) txtContent.focus();
+
+      // ハンバーガーメニューが開いていれば閉じる
+      const hamburgerBtn = document.getElementById('hamburgerBtn');
+      const navMenu = document.getElementById('navMenuDropdown');
+      if (hamburgerBtn && navMenu) {
+        hamburgerBtn.setAttribute('aria-expanded', 'false');
+        navMenu.classList.remove('active');
+      }
+    };
+
+    const closeModal = () => {
+      modal.classList.add('hidden');
+    };
+
+    openBtns.forEach(btn => {
+      if (!btn.dataset.bound) {
+        btn.dataset.bound = 'true';
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openModal();
+        });
+      }
+    });
+
+    if (closeBtn && !closeBtn.dataset.bound) {
+      closeBtn.dataset.bound = 'true';
+      closeBtn.addEventListener('click', closeModal);
+    }
+
+    if (cancelBtn && !cancelBtn.dataset.bound) {
+      cancelBtn.dataset.bound = 'true';
+      cancelBtn.addEventListener('click', closeModal);
+    }
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeModal();
+      }
+    });
+
+    // フォーム送信処理
+    if (form && !form.dataset.bound) {
+      form.dataset.bound = 'true';
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const content = txtContent.value.trim();
+        if (!content) {
+          errorMsg.textContent = "内容を入力してください。";
+          errorMsg.classList.remove('hidden');
+          return;
+        }
+
+        const selectedType = (form.elements['feedbackType'] && form.elements['feedbackType'].value) || 'bug';
+        const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+        const shopNameEl = document.getElementById('currentShopName');
+        const shopName = shopNameEl ? shopNameEl.textContent : shopId;
+
+        // 送信中UI
+        submitBtn.disabled = true;
+        submitText.textContent = "送信中...";
+        errorMsg.classList.add('hidden');
+
+        try {
+          if (window.ShopManager && window.ShopManager.sendFeedback) {
+            await window.ShopManager.sendFeedback({
+              type: selectedType,
+              content,
+              page: window.location.href,
+              shopId,
+              shopName
+            });
+          }
+          closeModal();
+          AppCommon.showToast("📨 ご報告ありがとうございます！受け付けました。");
+        } catch (err) {
+          console.error("Feedback submit error:", err);
+          errorMsg.textContent = err.message || "送信に失敗しました。時間をおいて再試行してください。";
+          errorMsg.classList.remove('hidden');
+        } finally {
+          submitBtn.disabled = false;
+          submitText.textContent = "送信する";
+        }
+      });
+    }
+  },
+
+  // 8. 共通UI初期化
   initCommonUI() {
     this.initHamburgerMenu();
+    this.initFeedbackModal();
 
     const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
     this.syncNavigationShopParams(shopId);

@@ -433,6 +433,88 @@ function removeShopFromHistory(shopId) {
   return history;
 }
 
+// Webhook URL 定数（Discord通知用）
+const DISCORD_FEEDBACK_WEBHOOK_URL = "https://discord.com/api/webhooks/1540383569887625278/T0k6TtneYlNj8VZtcXcIObb4yODX0lW7Ijxaa9awFHf2z7JrBqMmHZQJLgDf5ZpKOka1";
+const GITHUB_REPO = "wauman336633/soragon-mechanic-calculator";
+
+// フィードバック（不具合・要望）送信処理
+async function sendFeedback({ type = 'bug', content = '', page = '', shopId = '', shopName = '' }) {
+  if (!content || !content.trim()) {
+    throw new Error("内容を入力してください。");
+  }
+
+  const cleanContent = content.trim();
+  const pageUrl = page || window.location.href;
+  const typeMap = {
+    bug: { name: '🐛 不具合報告', label: 'bug', prefix: '[Bug]' },
+    feature: { name: '💡 機能・要望', label: 'enhancement', prefix: '[Feature]' },
+    other: { name: '❓ その他', label: 'feedback', prefix: '[Feedback]' }
+  };
+  const currentTypeInfo = typeMap[type] || typeMap.other;
+
+  // GitHub Issue作成用URL生成
+  const summaryTitle = cleanContent.slice(0, 40).replace(/\r?\n/g, ' ');
+  const issueTitle = `${currentTypeInfo.prefix} ${summaryTitle}${cleanContent.length > 40 ? '...' : ''}`;
+  const issueBody = `## 報告内容\n${cleanContent}\n\n---\n### 発生環境・コンテキスト\n- **種別**: ${currentTypeInfo.name}\n- **発生ページ**: ${pageUrl}\n- **対象店舗**: ${shopName || '未指定'} (\`${shopId || 'なし'}\`)\n- **User-Agent**: \`${navigator.userAgent}\`\n- **報告日時**: ${new Date().toLocaleString('ja-JP')}`;
+  
+  const githubIssueUrl = `https://github.com/${GITHUB_REPO}/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}&labels=${encodeURIComponent(currentTypeInfo.label)}`;
+
+  // 1. Firestoreへ保存
+  if (db) {
+    try {
+      await db.collection('feedbacks').add({
+        type,
+        typeName: currentTypeInfo.name,
+        content: cleanContent,
+        page: pageUrl,
+        shopId: shopId || 'unknown',
+        shopName: shopName || '',
+        userAgent: navigator.userAgent,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        githubIssueUrl
+      });
+    } catch (dbErr) {
+      console.error("Firestore feedback save error:", dbErr);
+      throw new Error("データの保存に失敗しました。時間をおいて再試行してください。");
+    }
+  }
+
+  // 2. Discord Webhookへ通知
+  if (DISCORD_FEEDBACK_WEBHOOK_URL && DISCORD_FEEDBACK_WEBHOOK_URL.trim().startsWith('http')) {
+    const embedColor = type === 'bug' ? 0xff4d4f : (type === 'feature' ? 0x1890ff : 0xfaad14);
+    const discordPayload = {
+      embeds: [
+        {
+          title: `${currentTypeInfo.name}: ${summaryTitle}${cleanContent.length > 40 ? '...' : ''}`,
+          url: githubIssueUrl,
+          description: `>>> ${cleanContent}\n\n[🚀 **GitHubでIssueを作成する（クリック）**](${githubIssueUrl})`,
+          color: embedColor,
+          fields: [
+            { name: "📍 発生ページ", value: pageUrl, inline: true },
+            { name: "🏢 対象店舗", value: `${shopName || '未指定'} (\`${shopId || 'なし'}\`)`, inline: true }
+          ],
+          footer: {
+            text: "Mechanic Calculator Feedback System"
+          },
+          timestamp: new Date().toISOString()
+        }
+      ]
+    };
+
+    try {
+      await fetch(DISCORD_FEEDBACK_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discordPayload)
+      });
+    } catch (webhookErr) {
+      console.warn("Discord Webhook sending failed:", webhookErr);
+    }
+  }
+
+  return { success: true, githubIssueUrl };
+}
+
 // グローバル公開
 window.ShopManager = {
   DEFAULT_PRICES,
@@ -452,6 +534,8 @@ window.ShopManager = {
   verifyShopPasscode,
   getShopHistory,
   addShopToHistory,
-  removeShopFromHistory
+  removeShopFromHistory,
+  sendFeedback
 };
+
 
