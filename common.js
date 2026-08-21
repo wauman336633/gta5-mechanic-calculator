@@ -76,6 +76,23 @@ const AppCommon = {
 
   // 4. URLパラメータの維持・リンク自動同期
   syncNavigationShopParams(shopId) {
+    const isPortal = window.location.pathname === '/' ||
+                     window.location.pathname.endsWith('/index.html') ||
+                     window.location.pathname.endsWith('index.html') ||
+                     document.body.classList.contains('portal-body');
+
+    // ポータル画面の場合：URLにshopパラメータを追加せず、付与されている場合は削除してクリーンなURLに統一
+    if (isPortal) {
+      const currentParams = new URLSearchParams(window.location.search);
+      if (currentParams.has('shop') && window.history && window.history.replaceState) {
+        currentParams.delete('shop');
+        const remainingQuery = currentParams.toString();
+        const newUrl = remainingQuery ? `${window.location.pathname}?${remainingQuery}` : window.location.pathname;
+        window.history.replaceState(null, '', newUrl);
+      }
+      return;
+    }
+
     if (!shopId) return;
     const links = document.querySelectorAll('a[href]');
     links.forEach(link => {
