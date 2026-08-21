@@ -433,8 +433,8 @@ function removeShopFromHistory(shopId) {
   return history;
 }
 
-// Webhook URL 定数（ここにDiscordのWebhook URLを設定）
-const DISCORD_FEEDBACK_WEBHOOK_URL = "";
+// Webhook URL 定数（Discord通知用）
+const DISCORD_FEEDBACK_WEBHOOK_URL = "https://discord.com/api/webhooks/1540383569887625278/T0k6TtneYlNj8VZtcXcIObb4yODX0lW7Ijxaa9awFHf2z7JrBqMmHZQJLgDf5ZpKOka1";
 const GITHUB_REPO = "wauman336633/soragon-mechanic-calculator";
 
 // フィードバック（不具合・要望）送信処理
