@@ -203,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('すべての数量をリセットしました');
   });
 
-  // Initial Calculation
+  // Initial Calculation & Labels
+  updateUnitPriceLabels();
   calculateTotal();
 });

@@ -8,6 +8,16 @@ const AppCommon = {
     return '¥' + Math.floor(num || 0).toLocaleString('ja-JP');
   },
 
+  // 1-2. 短縮金額フォーマット (¥300万 / ¥5,000)
+  formatShortPrice(num) {
+    const val = Math.floor(num || 0);
+    if (val >= 10000) {
+      const man = val / 10000;
+      return `¥${Number.isInteger(man) ? man : man.toFixed(2).replace(/\.?0+$/, '')}万`;
+    }
+    return '¥' + val.toLocaleString('ja-JP');
+  },
+
   // 2. トースト通知表示
   toastTimer: null,
   showToast(message) {
