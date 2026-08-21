@@ -109,7 +109,7 @@ const AppCommon = {
 
       const copyShopUrl = () => {
         const url = new URL(window.location.href);
-        url.searchParams.set('shop', shopId || (window.ShopManager ? window.ShopManager.getShopId() : 'soragon'));
+        url.searchParams.set('shop', shopId || (window.ShopManager ? window.ShopManager.getShopId() : 'sample'));
         this.copyToClipboard(url.href, `🔗 店舗URLをコピーしました！`);
       };
 
@@ -128,7 +128,7 @@ const AppCommon = {
       menuShareItem.addEventListener('click', (e) => {
         e.preventDefault();
         const url = new URL(window.location.href);
-        url.searchParams.set('shop', shopId || (window.ShopManager ? window.ShopManager.getShopId() : 'soragon'));
+        url.searchParams.set('shop', shopId || (window.ShopManager ? window.ShopManager.getShopId() : 'sample'));
         this.copyToClipboard(url.href, `🔗 店舗URLをコピーしました！`);
       });
     }
@@ -234,7 +234,7 @@ const AppCommon = {
     const shopDisplay = document.getElementById('feedbackCurrentShop');
 
     const openModal = () => {
-      const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+      const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'sample';
       const shopNameEl = document.getElementById('currentShopName');
       const shopName = shopNameEl ? shopNameEl.textContent : shopId;
 
@@ -302,7 +302,7 @@ const AppCommon = {
         }
 
         const selectedType = (form.elements['feedbackType'] && form.elements['feedbackType'].value) || 'bug';
-        const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+        const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'sample';
         const shopNameEl = document.getElementById('currentShopName');
         const shopName = shopNameEl ? shopNameEl.textContent : shopId;
 
@@ -340,7 +340,7 @@ const AppCommon = {
     this.initHamburgerMenu();
     this.initFeedbackModal();
 
-    const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+    const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'sample';
     this.syncNavigationShopParams(shopId);
     this.initShopShareAction(shopId);
 

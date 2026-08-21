@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   // マルチ店舗データの接続・購読
-  const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
+  const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'sample';
   const currentShopNameEl = document.getElementById('currentShopName');
 
   if (window.ShopManager) {
