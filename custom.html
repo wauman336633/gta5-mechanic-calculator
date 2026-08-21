@@ -145,7 +145,7 @@
                 <input type="checkbox" id="chkTurbo">
                 <div class="toggle-content">
                   <span class="item-name">ターボ</span>
-                  <span class="item-price">¥3,000,000</span>
+                  <span class="item-price" id="priceTurbo">¥3,000,000</span>
                 </div>
               </label>
             </div>
@@ -155,7 +155,7 @@
                 <input type="checkbox" id="chkAntiLag">
                 <div class="toggle-content">
                   <span class="item-name">アンチラグ</span>
-                  <span class="item-price">¥10,000,000</span>
+                  <span class="item-price" id="priceAntiLag">¥5,000,000</span>
                 </div>
               </label>
             </div>
@@ -165,7 +165,7 @@
                 <input type="checkbox" id="chkHarness">
                 <div class="toggle-content">
                   <span class="item-name">ハーネス</span>
-                  <span class="item-price">¥500,000</span>
+                  <span class="item-price" id="priceHarness">¥1,000,000</span>
                 </div>
               </label>
             </div>
@@ -250,7 +250,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">NOS補充</span>
-              <span class="item-unit-price">¥400,000</span>
+              <span class="item-unit-price" id="priceNosRefillCustom">¥400,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntNosRefill">-</button>
@@ -262,7 +262,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">NOS新規</span>
-              <span class="item-unit-price">¥500,000</span>
+              <span class="item-unit-price" id="priceNosNewCustom">¥500,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntNosNew">-</button>
@@ -282,7 +282,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">基本外装</span>
-              <span class="item-unit-price">¥50,000</span>
+              <span class="item-unit-price" id="priceExteriorBase">¥50,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntExteriorBase">-</button>
@@ -294,7 +294,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">カスタムホイール</span>
-              <span class="item-unit-price">¥200,000</span>
+              <span class="item-unit-price" id="priceExteriorWheels">¥200,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntWheels">-</button>
@@ -306,7 +306,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">スタンス変更</span>
-              <span class="item-unit-price">¥100,000</span>
+              <span class="item-unit-price" id="priceExteriorStance">¥100,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntStance">-</button>
@@ -326,7 +326,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">ダクトテープ</span>
-              <span class="item-unit-price">¥50,000</span>
+              <span class="item-unit-price" id="priceDuctTapeCustom">¥50,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntDuctTape">-</button>
@@ -338,7 +338,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">洗車キット</span>
-              <span class="item-unit-price">¥50,000</span>
+              <span class="item-unit-price" id="priceCarWashCustom">¥50,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntCarWash">-</button>
@@ -350,7 +350,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">ネオンコントローラー</span>
-              <span class="item-unit-price">¥200,000</span>
+              <span class="item-unit-price" id="priceNeonCtrlCustom">¥200,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntNeonCtrl">-</button>
@@ -362,7 +362,7 @@
           <div class="item-row counter-item">
             <div class="counter-info">
               <span class="item-name">エアサスコントローラー</span>
-              <span class="item-unit-price">¥1,000,000</span>
+              <span class="item-unit-price" id="priceAirSusCtrlCustom">¥1,000,000</span>
             </div>
             <div class="counter-controls">
               <button class="cnt-btn dec" data-target="cntAirSusCtrl">-</button>

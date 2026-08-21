@@ -57,6 +57,87 @@ document.addEventListener('DOMContentLoaded', () => {
     items: { ductTape: 50000, carWash: 50000, neonCtrl: 200000, airSusCtrl: 1000000 }
   }));
 
+  // Level Selection Groups Definition
+  const levelGroups = [
+    { elementId: 'lvlEngine', displayId: 'priceEngineCustom', getValue: () => state.performance.engine, setValue: (v) => state.performance.engine = v, getPriceList: () => PRICES.performance.engine },
+    { elementId: 'lvlBrakes', displayId: 'priceBrakes', getValue: () => state.performance.brakes, setValue: (v) => state.performance.brakes = v, getPriceList: () => PRICES.performance.brakes },
+    { elementId: 'lvlSuspension', displayId: 'priceSuspension', getValue: () => state.performance.suspension, setValue: (v) => state.performance.suspension = v, getPriceList: () => PRICES.performance.suspension },
+    { elementId: 'lvlTransmission', displayId: 'priceTransmission', getValue: () => state.performance.transmission, setValue: (v) => state.performance.transmission = v, getPriceList: () => PRICES.performance.transmission },
+    { elementId: 'lvlDurabilityOilPump', displayId: 'priceDurabilityOilPump', getValue: () => state.performance.durabilityParts.oilPump, setValue: (v) => state.performance.durabilityParts.oilPump = v, getPriceList: () => PRICES.performance.durability },
+    { elementId: 'lvlDurabilityBattery', displayId: 'priceDurabilityBattery', getValue: () => state.performance.durabilityParts.battery, setValue: (v) => state.performance.durabilityParts.battery = v, getPriceList: () => PRICES.performance.durability },
+    { elementId: 'lvlDurabilityFuelTank', displayId: 'priceDurabilityFuelTank', getValue: () => state.performance.durabilityParts.fuelTank, setValue: (v) => state.performance.durabilityParts.fuelTank = v, getPriceList: () => PRICES.performance.durability },
+    { elementId: 'lvlDurabilityDriveShaft', displayId: 'priceDurabilityDriveShaft', getValue: () => state.performance.durabilityParts.driveShaft, setValue: (v) => state.performance.durabilityParts.driveShaft = v, getPriceList: () => PRICES.performance.durability },
+    { elementId: 'lvlDurabilityCylinder', displayId: 'priceDurabilityCylinder', getValue: () => state.performance.durabilityParts.cylinder, setValue: (v) => state.performance.durabilityParts.cylinder = v, getPriceList: () => PRICES.performance.durability }
+  ];
+
+  // Helper Format Currency
+  function formatJPY(num) {
+    return window.AppCommon ? window.AppCommon.formatJPY(num) : ('¥' + Math.floor(num).toLocaleString('ja-JP'));
+  }
+
+  function formatShortPrice(num) {
+    return window.AppCommon && window.AppCommon.formatShortPrice ? window.AppCommon.formatShortPrice(num) : formatJPY(num);
+  }
+
+  // Update DOM price labels dynamically
+  function updateDynamicPriceLabels() {
+    // 1. 各Levelボタン内のテキスト (<small>タグ内) と 選択中ヘッダー表示
+    levelGroups.forEach(group => {
+      const container = document.getElementById(group.elementId);
+      const display = document.getElementById(group.displayId);
+      const priceList = group.getPriceList();
+      if (container && priceList) {
+        container.querySelectorAll('.lvl-btn').forEach(btn => {
+          const level = parseInt(btn.getAttribute('data-level'), 10);
+          const price = priceList[level];
+          const small = btn.querySelector('small');
+          if (small && price !== undefined) {
+            small.textContent = formatShortPrice(price);
+          }
+          btn.setAttribute('data-price', price);
+        });
+      }
+      if (display) {
+        const currentVal = group.getValue();
+        if (currentVal > 0 && priceList && priceList[currentVal] !== undefined) {
+          display.textContent = formatJPY(priceList[currentVal]);
+        }
+      }
+    });
+
+    // 2. 単一パーツ
+    const priceTurbo = document.getElementById('priceTurbo');
+    const priceAntiLag = document.getElementById('priceAntiLag');
+    const priceHarness = document.getElementById('priceHarness');
+    if (priceTurbo && PRICES.performance.turbo !== undefined) priceTurbo.textContent = formatJPY(PRICES.performance.turbo);
+    if (priceAntiLag && PRICES.performance.antiLag !== undefined) priceAntiLag.textContent = formatJPY(PRICES.performance.antiLag);
+    if (priceHarness && PRICES.performance.harness !== undefined) priceHarness.textContent = formatJPY(PRICES.performance.harness);
+
+    // 3. 外装
+    const priceExteriorBase = document.getElementById('priceExteriorBase');
+    const priceExteriorWheels = document.getElementById('priceExteriorWheels');
+    const priceExteriorStance = document.getElementById('priceExteriorStance');
+    if (priceExteriorBase && PRICES.exterior.base !== undefined) priceExteriorBase.textContent = formatJPY(PRICES.exterior.base);
+    if (priceExteriorWheels && PRICES.exterior.wheels !== undefined) priceExteriorWheels.textContent = formatJPY(PRICES.exterior.wheels);
+    if (priceExteriorStance && PRICES.exterior.stance !== undefined) priceExteriorStance.textContent = formatJPY(PRICES.exterior.stance);
+
+    // 4. NOS
+    const priceNosRefillCustom = document.getElementById('priceNosRefillCustom');
+    const priceNosNewCustom = document.getElementById('priceNosNewCustom');
+    if (priceNosRefillCustom && PRICES.repairs.nosRefill !== undefined) priceNosRefillCustom.textContent = formatJPY(PRICES.repairs.nosRefill);
+    if (priceNosNewCustom && PRICES.repairs.nosNew !== undefined) priceNosNewCustom.textContent = formatJPY(PRICES.repairs.nosNew);
+
+    // 5. 販売品
+    const priceDuctTapeCustom = document.getElementById('priceDuctTapeCustom');
+    const priceCarWashCustom = document.getElementById('priceCarWashCustom');
+    const priceNeonCtrlCustom = document.getElementById('priceNeonCtrlCustom');
+    const priceAirSusCtrlCustom = document.getElementById('priceAirSusCtrlCustom');
+    if (priceDuctTapeCustom && PRICES.items.ductTape !== undefined) priceDuctTapeCustom.textContent = formatJPY(PRICES.items.ductTape);
+    if (priceCarWashCustom && PRICES.items.carWash !== undefined) priceCarWashCustom.textContent = formatJPY(PRICES.items.carWash);
+    if (priceNeonCtrlCustom && PRICES.items.neonCtrl !== undefined) priceNeonCtrlCustom.textContent = formatJPY(PRICES.items.neonCtrl);
+    if (priceAirSusCtrlCustom && PRICES.items.airSusCtrl !== undefined) priceAirSusCtrlCustom.textContent = formatJPY(PRICES.items.airSusCtrl);
+  }
+
   // マルチ店舗データの接続・購読
   const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'soragon';
   const currentShopNameEl = document.getElementById('currentShopName');
@@ -67,52 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (shopInfo.prices) {
         if (shopInfo.prices.custom) PRICES = shopInfo.prices.custom;
         if (shopInfo.prices.repairItems) PRICES.items = shopInfo.prices.repairItems;
+        updateDynamicPriceLabels();
         calculateTotal();
       }
     });
-  }
-
-  // DOM Elements
-  const btnResetCustom = document.getElementById('btnResetCustom');
-
-  const cntNosRefill = document.getElementById('cntNosRefill');
-  const cntNosNew = document.getElementById('cntNosNew');
-
-  const cntExteriorBase = document.getElementById('cntExteriorBase');
-  const cntWheels = document.getElementById('cntWheels');
-  const cntStance = document.getElementById('cntStance');
-
-  const chkTurbo = document.getElementById('chkTurbo');
-  const chkAntiLag = document.getElementById('chkAntiLag');
-  const chkHarness = document.getElementById('chkHarness');
-
-  const cntDuctTape = document.getElementById('cntDuctTape');
-  const cntCarWash = document.getElementById('cntCarWash');
-  const cntNeonCtrl = document.getElementById('cntNeonCtrl');
-  const cntAirSusCtrl = document.getElementById('cntAirSusCtrl');
-
-  const btnDisc3 = document.getElementById('btnDisc3');
-  const btnDisc5 = document.getElementById('btnDisc5');
-  const btnDisc7 = document.getElementById('btnDisc7');
-  const customDiscountType = document.getElementById('customDiscountType');
-  const customDiscountVal = document.getElementById('customDiscountVal');
-
-  const subtotalDisplay = document.getElementById('subtotalDisplay');
-  const totalDisplay = document.getElementById('totalDisplay');
-  const vaultDisplay = document.getElementById('vaultDisplay');
-  const discountTagDisplay = document.getElementById('discountTagDisplay');
-
-  const btnCopyNumber = document.getElementById('btnCopyNumber');
-  const btnCopyVault = document.getElementById('btnCopyVault');
-  const btnCopyVaultSummary = document.getElementById('btnCopyVaultSummary');
-  const btnCopyOwnCar = document.getElementById('btnCopyOwnCar');
-
-  const toast = document.getElementById('toast');
-  const toastMsg = document.getElementById('toastMsg');
-
-  // Helper Format Currency
-  function formatJPY(num) {
-    return window.AppCommon ? window.AppCommon.formatJPY(num) : ('¥' + Math.floor(num).toLocaleString('ja-JP'));
   }
 
   // Calculate Total & Vault Amount (30%)
@@ -298,18 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Level Selection Buttons
-  const levelGroups = [
-    { elementId: 'lvlEngine', displayId: 'priceEngineCustom', getValue: () => state.performance.engine, setValue: (v) => state.performance.engine = v, getPriceList: () => PRICES.performance.engine },
-    { elementId: 'lvlBrakes', displayId: 'priceBrakes', getValue: () => state.performance.brakes, setValue: (v) => state.performance.brakes = v, getPriceList: () => PRICES.performance.brakes },
-    { elementId: 'lvlSuspension', displayId: 'priceSuspension', getValue: () => state.performance.suspension, setValue: (v) => state.performance.suspension = v, getPriceList: () => PRICES.performance.suspension },
-    { elementId: 'lvlTransmission', displayId: 'priceTransmission', getValue: () => state.performance.transmission, setValue: (v) => state.performance.transmission = v, getPriceList: () => PRICES.performance.transmission },
-    { elementId: 'lvlDurabilityOilPump', displayId: 'priceDurabilityOilPump', getValue: () => state.performance.durabilityParts.oilPump, setValue: (v) => state.performance.durabilityParts.oilPump = v, getPriceList: () => PRICES.performance.durability },
-    { elementId: 'lvlDurabilityBattery', displayId: 'priceDurabilityBattery', getValue: () => state.performance.durabilityParts.battery, setValue: (v) => state.performance.durabilityParts.battery = v, getPriceList: () => PRICES.performance.durability },
-    { elementId: 'lvlDurabilityFuelTank', displayId: 'priceDurabilityFuelTank', getValue: () => state.performance.durabilityParts.fuelTank, setValue: (v) => state.performance.durabilityParts.fuelTank = v, getPriceList: () => PRICES.performance.durability },
-    { elementId: 'lvlDurabilityDriveShaft', displayId: 'priceDurabilityDriveShaft', getValue: () => state.performance.durabilityParts.driveShaft, setValue: (v) => state.performance.durabilityParts.driveShaft = v, getPriceList: () => PRICES.performance.durability },
-    { elementId: 'lvlDurabilityCylinder', displayId: 'priceDurabilityCylinder', getValue: () => state.performance.durabilityParts.cylinder, setValue: (v) => state.performance.durabilityParts.cylinder = v, getPriceList: () => PRICES.performance.durability }
-  ];
+  // Level Selection Buttons Binding
 
   levelGroups.forEach(group => {
     const container = document.getElementById(group.elementId);
@@ -447,5 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('すべての選択をリセットしました');
   });
 
+  updateDynamicPriceLabels();
   calculateTotal();
 });

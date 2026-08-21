@@ -76,6 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const priceFullRepair = document.getElementById('priceFullRepair');
   const priceEngineRepair = document.getElementById('priceEngineRepair');
   const priceBodyRepair = document.getElementById('priceBodyRepair');
+  const priceAircraft = document.getElementById('priceAircraft');
+  const priceNosRefill = document.getElementById('priceNosRefill');
+  const priceNosNew = document.getElementById('priceNosNew');
+  const priceDuctTape = document.getElementById('priceDuctTape');
+  const priceCarWash = document.getElementById('priceCarWash');
+  const priceNeonCtrl = document.getElementById('priceNeonCtrl');
+  const priceAirSusCtrl = document.getElementById('priceAirSusCtrl');
 
   const chkOilPump = document.getElementById('chkOilPump');
   const chkBattery = document.getElementById('chkBattery');
@@ -112,6 +119,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (priceFullRepair) priceFullRepair.textContent = formatJPY(PRICES.repairs.full[mode]);
     if (priceEngineRepair) priceEngineRepair.textContent = formatJPY(PRICES.repairs.engine[mode]);
     if (priceBodyRepair) priceBodyRepair.textContent = formatJPY(PRICES.repairs.body[mode]);
+    if (priceAircraft) priceAircraft.textContent = `(+${formatJPY(PRICES.repairs.aircraft)})`;
+
+    document.querySelectorAll('.price-degraded-part').forEach(el => {
+      el.textContent = formatJPY(PRICES.repairs.degradedPartUnit);
+    });
+
+    if (priceNosRefill) priceNosRefill.textContent = formatJPY(PRICES.repairs.nosRefill);
+    if (priceNosNew) priceNosNew.textContent = formatJPY(PRICES.repairs.nosNew);
+
+    if (priceDuctTape) priceDuctTape.textContent = formatJPY(PRICES.items.ductTape);
+    if (priceCarWash) priceCarWash.textContent = formatJPY(PRICES.items.carWash);
+    if (priceNeonCtrl) priceNeonCtrl.textContent = formatJPY(PRICES.items.neonCtrl);
+    if (priceAirSusCtrl) priceAirSusCtrl.textContent = formatJPY(PRICES.items.airSusCtrl);
+
+    if (state.repairs.tiresCount > 0 && priceTiresDisplay) {
+      priceTiresDisplay.textContent = formatJPY(state.repairs.tiresCount * PRICES.repairs.tires);
+    }
   }
 
   // Calculate Total Amount
@@ -192,10 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnModeOnsite.classList.toggle('active', !isShop);
     modeTag.textContent = isShop ? '店内料金適用中' : '出張料金適用中';
 
-    priceFullRepair.textContent = formatJPY(PRICES.repairs.full[state.mode]);
-    priceEngineRepair.textContent = formatJPY(PRICES.repairs.engine[state.mode]);
-    priceBodyRepair.textContent = formatJPY(PRICES.repairs.body[state.mode]);
-
+    updateDynamicPriceLabels();
     calculateTotal();
   }
 
