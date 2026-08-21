@@ -9,6 +9,13 @@ service cloud.firestore {
       allow update: if request.resource.data.id == shopId;
       allow delete: if false; // 誤削除防止
     }
+
+    match /feedbacks/{feedbackId} {
+      // 誰でもフィードバックの送信（新規作成）が可能
+      allow create: if true;
+      // ユーザーからの読み取り・更新・削除は禁止（管理者が直接閲覧）
+      allow read, update, delete: if false;
+    }
   }
 }
 
