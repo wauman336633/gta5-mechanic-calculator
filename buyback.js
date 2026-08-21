@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Helper: Format Currency
   function formatJPY(num) {
-    return '¥' + Math.floor(num).toLocaleString('ja-JP');
+    return window.AppCommon ? window.AppCommon.formatJPY(num) : ('¥' + Math.floor(num).toLocaleString('ja-JP'));
   }
 
   // Calculate Total Buyback Amount
@@ -101,30 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Toast Function
-  let toastTimer = null;
   function showToast(message) {
-    toastMsg.textContent = message;
-    toast.classList.remove('hidden');
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toast.classList.add('hidden');
-    }, 2500);
+    if (window.AppCommon) window.AppCommon.showToast(message);
   }
 
   // Clipboard Helper
   function copyToClipboard(text, successMsg) {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast(successMsg);
-    }).catch(() => {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      showToast(successMsg);
-    });
+    if (window.AppCommon) {
+      window.AppCommon.copyToClipboard(text, successMsg);
+    }
   }
+
 
   // Input & Counter Event Registrations
   materials.forEach(item => {

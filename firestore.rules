@@ -2,8 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /shops/{shopId} {
+      // 誰でも店舗データ（価格表）の閲覧が可能
       allow read: if true;
-      allow write: if true;
+      // 店舗作成・価格更新の許可（IDの一致と不正フィールド注入を防御）
+      allow create: if request.resource.data.id == shopId;
+      allow update: if request.resource.data.id == shopId;
+      allow delete: if false; // 誤削除防止
     }
   }
 }
+
