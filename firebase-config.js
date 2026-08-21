@@ -108,6 +108,10 @@ function setShopId(shopId) {
   return cleanId;
 }
 
+const SAMPLE_SHOP_ID = 'sample';
+const SAMPLE_PASSCODE = '1111';
+const SAMPLE_RESET_INTERVAL_MS = 60 * 60 * 1000; // 1時間 (ミリ秒)
+
 // 深いマージを行うユーティリティ
 function mergeDeep(target, source) {
   const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
@@ -134,48 +138,91 @@ function mergeDeep(target, source) {
 // 3. 店舗データの購読 (リアルタイム更新)
 function subscribeShopPrices(shopId, callback) {
   initFirebase();
+  const cleanId = (shopId || '').toLowerCase().trim();
   
   // Firebase未設定またはオフライン時のフォールバック
   if (!firebaseInitialized || !db) {
-    const localData = localStorage.getItem(`shop_prices_${shopId}`);
+    const localData = localStorage.getItem(`shop_prices_${cleanId}`);
     let prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
-        prices = mergeDeep(prices, parsed.prices || {});
+        if (cleanId === SAMPLE_SHOP_ID && parsed.updatedAt) {
+          const lastUpdated = new Date(parsed.updatedAt).getTime();
+          const now = Date.now();
+          if (!isNaN(lastUpdated) && (now - lastUpdated > SAMPLE_RESET_INTERVAL_MS)) {
+            // 1時間経過しているため初期設定にリセット
+            prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+            localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({
+              id: cleanId,
+              name: 'サンプル店舗',
+              prices: DEFAULT_PRICES,
+              updatedAt: new Date().toISOString()
+            }));
+          } else {
+            prices = mergeDeep(prices, parsed.prices || {});
+          }
+        } else {
+          prices = mergeDeep(prices, parsed.prices || {});
+        }
       } catch (e) {
         console.error("Local data parse error", e);
       }
     }
-    const shopInfo = { id: shopId, name: shopId === 'soragon' ? 'ソラゴンメカニック' : shopId.toUpperCase(), prices };
+    const shopInfo = {
+      id: cleanId,
+      name: cleanId === 'soragon' ? 'ソラゴンメカニック' : (cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase()),
+      prices
+    };
     callback(shopInfo);
     return () => {};
   }
 
   // Firestoreからリアルタイム受信
-  const unsubscribe = db.collection('shops').doc(shopId).onSnapshot(doc => {
+  const unsubscribe = db.collection('shops').doc(cleanId).onSnapshot(async doc => {
     let shopInfo = {
-      id: shopId,
-      name: shopId === 'soragon' ? 'ソラゴンメカニック' : shopId.toUpperCase(),
+      id: cleanId,
+      name: cleanId === 'soragon' ? 'ソラゴンメカニック' : (cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase()),
       prices: JSON.parse(JSON.stringify(DEFAULT_PRICES))
     };
 
     if (doc.exists) {
       const data = doc.data();
       shopInfo.name = data.name || shopInfo.name;
+
+      // sample店舗の自動リセット判定（1時間経過で初期化）
+      if (cleanId === SAMPLE_SHOP_ID && data.updatedAt) {
+        const lastUpdated = new Date(data.updatedAt).getTime();
+        const now = Date.now();
+        if (!isNaN(lastUpdated) && (now - lastUpdated > SAMPLE_RESET_INTERVAL_MS)) {
+          try {
+            await db.collection('shops').doc(cleanId).update({
+              prices: DEFAULT_PRICES,
+              updatedAt: new Date().toISOString()
+            });
+          } catch (e) {
+            console.warn("Sample shop reset error", e);
+          }
+          shopInfo.prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+          localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify(shopInfo));
+          callback(shopInfo);
+          return;
+        }
+      }
+
       if (data.prices) {
         shopInfo.prices = mergeDeep(shopInfo.prices, data.prices);
       }
     }
     
     // キャッシュ保存
-    localStorage.setItem(`shop_prices_${shopId}`, JSON.stringify(shopInfo));
+    localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify(shopInfo));
     callback(shopInfo);
   }, error => {
     console.warn("Firestore access error, fallback to default", error);
     callback({
-      id: shopId,
-      name: shopId === 'soragon' ? 'ソラゴンメカニック' : shopId.toUpperCase(),
+      id: cleanId,
+      name: cleanId === 'soragon' ? 'ソラゴンメカニック' : (cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase()),
       prices: JSON.parse(JSON.stringify(DEFAULT_PRICES))
     });
   });
@@ -221,6 +268,13 @@ async function updateShopPrices(shopId, passcode, newPrices) {
   initFirebase();
   const cleanId = shopId.toLowerCase().trim();
 
+  // sample店舗のパスコード検証（1111固定）
+  if (cleanId === SAMPLE_SHOP_ID) {
+    if (passcode !== SAMPLE_PASSCODE) {
+      throw new Error("管理パスコードが一致しません。");
+    }
+  }
+
   if (firebaseInitialized && db) {
     const docRef = db.collection('shops').doc(cleanId);
     const doc = await docRef.get();
@@ -228,8 +282,8 @@ async function updateShopPrices(shopId, passcode, newPrices) {
     if (!doc.exists) {
       await docRef.set({
         id: cleanId,
-        name: cleanId.toUpperCase(),
-        passcode: passcode,
+        name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
+        passcode: cleanId === SAMPLE_SHOP_ID ? SAMPLE_PASSCODE : passcode,
         prices: newPrices,
         updatedAt: new Date().toISOString()
       });
@@ -237,7 +291,7 @@ async function updateShopPrices(shopId, passcode, newPrices) {
     }
 
     const data = doc.data();
-    if (data.passcode && data.passcode !== passcode) {
+    if (cleanId !== SAMPLE_SHOP_ID && data.passcode && data.passcode !== passcode) {
       throw new Error("管理パスコードが一致しません。");
     }
 
@@ -249,13 +303,18 @@ async function updateShopPrices(shopId, passcode, newPrices) {
   } else {
     // オフライン・ローカル保存
     const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
-    if (cachedInfo) {
+    if (cachedInfo && cleanId !== SAMPLE_SHOP_ID) {
       const parsed = JSON.parse(cachedInfo);
       if (parsed.passcode && parsed.passcode !== passcode) {
         throw new Error("管理パスコードが一致しません。");
       }
     }
-    localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({ id: cleanId, name: cleanId, prices: newPrices }));
+    localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({
+      id: cleanId,
+      name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId,
+      prices: newPrices,
+      updatedAt: new Date().toISOString()
+    }));
     return true;
   }
 }
@@ -264,6 +323,10 @@ async function updateShopPrices(shopId, passcode, newPrices) {
 async function verifyShopPasscode(shopId, passcode) {
   initFirebase();
   const cleanId = shopId.toLowerCase().trim();
+
+  if (cleanId === SAMPLE_SHOP_ID) {
+    return passcode === SAMPLE_PASSCODE;
+  }
 
   if (firebaseInitialized && db) {
     const doc = await db.collection('shops').doc(cleanId).get();
