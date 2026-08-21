@@ -483,16 +483,17 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
   if (DISCORD_FEEDBACK_WEBHOOK_URL && DISCORD_FEEDBACK_WEBHOOK_URL.trim().startsWith('http')) {
     const embedColor = type === 'bug' ? 0xff4d4f : (type === 'feature' ? 0x1890ff : 0xfaad14);
     const discordPayload = {
+      content: `📢 **新しいフィードバックが届きました**\n👉 **[GitHubでIssueを作成する](${githubIssueUrl})**`,
       embeds: [
         {
           title: `${currentTypeInfo.name}: ${summaryTitle}${cleanContent.length > 40 ? '...' : ''}`,
+          url: githubIssueUrl,
           description: cleanContent,
           color: embedColor,
           fields: [
             { name: "📍 発生ページ", value: pageUrl, inline: true },
             { name: "🏢 店舗", value: `${shopName || '未指定'} (${shopId || 'なし'})`, inline: true },
-            { name: "📱 環境", value: `\`${navigator.userAgent.slice(0, 120)}\``, inline: false },
-            { name: "🚀 GitHub Issueを作成", value: `[👉 ここをクリックしてIssueを作成](${githubIssueUrl})`, inline: false }
+            { name: "📱 環境", value: `\`${navigator.userAgent.slice(0, 100)}\``, inline: false }
           ],
           footer: {
             text: "Mechanic Calculator Feedback System"
