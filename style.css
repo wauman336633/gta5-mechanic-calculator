@@ -1134,6 +1134,58 @@ body {
   margin-bottom: 20px;
 }
 
+/* Sample Passcode Notice */
+.sample-passcode-notice {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.sample-passcode-notice .notice-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.sample-passcode-notice .notice-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sample-passcode-notice .notice-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #93c5fd;
+}
+
+.sample-passcode-notice .notice-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sample-passcode-notice code {
+  background: var(--accent-blue);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+
+.sample-passcode-notice .notice-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
 /* Forms & Inputs */
 .form-group {
   margin-bottom: 18px;

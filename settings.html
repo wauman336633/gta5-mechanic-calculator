@@ -52,6 +52,16 @@
       <div class="modal-card">
         <h2 class="modal-title">🔐 管理者認証</h2>
         <p class="modal-desc">この店舗の価格変更を行うには管理用パスコードが必要です。</p>
+        <div id="samplePasscodeNotice" class="sample-passcode-notice" style="display: none;">
+          <div class="notice-icon">💡</div>
+          <div class="notice-body">
+            <span class="notice-title">サンプル店舗のお試し用パスコード</span>
+            <div class="notice-code-row">
+              <code>1111</code>
+              <span class="notice-sub">（自動入力されています）</span>
+            </div>
+          </div>
+        </div>
         <form id="formPasscode">
           <div class="form-group">
             <label class="form-label" for="txtPasscode">パスコード</label>

@@ -8,12 +8,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalPasscode = document.getElementById('modalPasscode');
   const formPasscode = document.getElementById('formPasscode');
   const txtPasscode = document.getElementById('txtPasscode');
+  const samplePasscodeNotice = document.getElementById('samplePasscodeNotice');
   const passcodeError = document.getElementById('passcodeError');
   const settingsContent = document.getElementById('settingsContent');
   const formSettings = document.getElementById('formSettings');
   const currentShopName = document.getElementById('currentShopName');
   const toast = document.getElementById('toast');
   const toastMsg = document.getElementById('toastMsg');
+
+  // サンプル店舗の場合は案内を表示＆初期値に1111をセット
+  if (shopId === 'sample') {
+    if (samplePasscodeNotice) {
+      samplePasscodeNotice.style.display = 'flex';
+    }
+    if (txtPasscode) {
+      txtPasscode.value = '1111';
+      txtPasscode.placeholder = '1111';
+    }
+  }
 
   // 店舗データの購読
   window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
