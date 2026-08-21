@@ -170,8 +170,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!authenticatedPasscode) return;
 
     const newPrices = JSON.parse(JSON.stringify(currentPrices || window.ShopManager.DEFAULT_PRICES));
+    if (!newPrices.repairs) {
+      newPrices.repairs = JSON.parse(JSON.stringify(window.ShopManager.DEFAULT_PRICES.repairs));
+    }
+    if (!newPrices.repairItems) {
+      newPrices.repairItems = JSON.parse(JSON.stringify(window.ShopManager.DEFAULT_PRICES.repairItems));
+    }
     if (!newPrices.custom) {
       newPrices.custom = JSON.parse(JSON.stringify(window.ShopManager.DEFAULT_PRICES.custom));
+    }
+    if (!newPrices.buyback) {
+      newPrices.buyback = JSON.parse(JSON.stringify(window.ShopManager.DEFAULT_PRICES.buyback));
     }
 
     // 修理

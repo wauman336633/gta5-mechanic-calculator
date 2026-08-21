@@ -22,6 +22,22 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    if (shopName.length > 50) {
+      showError("店舗名は50文字以内で入力してください。");
+      return;
+    }
+
+    const shopIdPattern = /^[a-z0-9_-]{2,30}$/;
+    if (!shopIdPattern.test(shopId)) {
+      showError("店舗IDは2〜30文字の半角英数字、ハイフン(-)、アンダースコア(_)のみ使用できます。");
+      return;
+    }
+
+    if (passcode.length < 4 || passcode.length > 32) {
+      showError("管理パスコードは4文字以上32文字以内で設定してください。");
+      return;
+    }
+
     if (passcode !== passcodeConfirm) {
       showError("確認用パスコードが一致しません。");
       return;

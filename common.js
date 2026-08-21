@@ -3,6 +3,17 @@
 // ==========================================================================
 
 const AppCommon = {
+  // 0. HTMLエスケープ (XSS対策)
+  escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  },
+
   // 1. 金額フォーマット (¥1,000,000)
   formatJPY(num) {
     return '¥' + Math.floor(num || 0).toLocaleString('ja-JP');

@@ -4,15 +4,51 @@ service cloud.firestore {
     match /shops/{shopId} {
       // 誰でも店舗データ（価格表）の閲覧が可能
       allow read: if true;
-      // 店舗作成・価格更新の許可（IDの一致と不正フィールド注入を防御）
-      allow create: if request.resource.data.id == shopId;
-      allow update: if request.resource.data.id == shopId;
+
+      // 店舗新規作成の許可（IDの一致、名前・IDのバリデーション）
+      allow create: if request.resource.data.id == shopId
+        && request.resource.data.id is string
+        && request.resource.data.id.size() >= 2
+        && request.resource.data.id.size() <= 30
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 50;
+
+      // 価格更新の許可（パスコードハッシュの照合、またはsample店舗）
+      allow update: if request.resource.data.id == shopId
+        && (
+          shopId == 'sample'
+          || (
+            exists(/databases/$(database)/documents/shops/$(shopId)/auth/secret)
+            && request.resource.data.passcodeHash == get(/databases/$(database)/documents/shops/$(shopId)/auth/secret).data.passcodeHash
+          )
+          || (
+            !exists(/databases/$(database)/documents/shops/$(shopId)/auth/secret)
+            && (
+              (resource.data.passcodeHash != null && request.resource.data.passcodeHash == resource.data.passcodeHash)
+              || (resource.data.passcode != null && request.resource.data.passcode == resource.data.passcode)
+            )
+          )
+        );
+
       allow delete: if false; // 誤削除防止
+
+      // パスコード認証情報の非公開ドキュメント
+      match /auth/secret {
+        // クライアントからの読み取り・更新・削除は禁止（Firestoreルール内部からのみ参照）
+        allow read, update, delete: if false;
+        // 店舗新規作成時のみ認証情報の作成を許可
+        allow create: if request.resource.data.passcodeHash is string
+          && request.resource.data.passcodeHash.size() == 64;
+      }
     }
 
     match /feedbacks/{feedbackId} {
-      // 誰でもフィードバックの送信（新規作成）が可能
-      allow create: if true;
+      // フィードバックの送信（新規作成・バリデーションあり）
+      allow create: if request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 2000
+        && request.resource.data.type in ['bug', 'feature', 'other'];
       // ユーザーからの読み取り・更新・削除は禁止（管理者が直接閲覧）
       allow read, update, delete: if false;
     }
