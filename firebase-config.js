@@ -1,6 +1,6 @@
 // Firebase Config & Shop Manager Module
 
-// デフォルト設定価格（ソラゴンメカニック初期価格）
+// デフォルト設定価格（標準初期価格）
 const DEFAULT_PRICES = {
   repairs: {
     full: { shop: 200000, onsite: 300000 },
@@ -82,7 +82,7 @@ function initFirebase() {
 
 // 2. 店舗ID管理
 const STORAGE_KEY = 'mechanic_shop_id';
-const DEFAULT_SHOP_ID = 'soragon';
+const DEFAULT_SHOP_ID = 'sample';
 
 function getShopId() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -181,7 +181,7 @@ function subscribeShopPrices(shopId, callback) {
     }
     const shopInfo = {
       id: cleanId,
-      name: cleanId === 'soragon' ? 'ソラゴンメカニック' : (cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase()),
+      name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
       prices
     };
     callback(shopInfo);
@@ -192,7 +192,7 @@ function subscribeShopPrices(shopId, callback) {
   const unsubscribe = db.collection('shops').doc(cleanId).onSnapshot(async doc => {
     let shopInfo = {
       id: cleanId,
-      name: cleanId === 'soragon' ? 'ソラゴンメカニック' : (cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase()),
+      name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
       prices: JSON.parse(JSON.stringify(DEFAULT_PRICES))
     };
 
@@ -234,7 +234,7 @@ function subscribeShopPrices(shopId, callback) {
     console.warn("Firestore access error, fallback to default", error);
     callback({
       id: cleanId,
-      name: cleanId === 'soragon' ? 'ソラゴンメカニック' : (cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase()),
+      name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
       prices: JSON.parse(JSON.stringify(DEFAULT_PRICES))
     });
   });
