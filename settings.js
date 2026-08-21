@@ -13,8 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsContent = document.getElementById('settingsContent');
   const formSettings = document.getElementById('formSettings');
   const currentShopName = document.getElementById('currentShopName');
-  const toast = document.getElementById('toast');
-  const toastMsg = document.getElementById('toastMsg');
 
   // サンプル店舗の場合は案内を表示＆初期値に1111をセット
   if (shopId === 'sample') {
@@ -26,6 +24,21 @@ document.addEventListener('DOMContentLoaded', () => {
       txtPasscode.placeholder = '1111';
     }
   }
+
+  // タブ切り替え制御
+  const tabBtns = document.querySelectorAll('.settings-tab-btn');
+  const tabPanes = document.querySelectorAll('.settings-tab-pane');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetTab = btn.getAttribute('data-tab');
+      tabBtns.forEach(b => b.classList.remove('active'));
+      tabPanes.forEach(p => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      const targetPane = document.getElementById(targetTab);
+      if (targetPane) targetPane.classList.add('active');
+    });
+  });
 
   // 店舗データの購読
   window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
@@ -65,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     passcodeError.style.display = 'block';
   }
 
-  // フォームに現在の価格を反省
+  // フォームに現在の価格を反映
   function populateFormValues(prices) {
     if (!prices) return;
 
@@ -87,6 +100,43 @@ document.addEventListener('DOMContentLoaded', () => {
     setVal('price_item_carWash', prices.repairItems?.carWash);
     setVal('price_item_neonCtrl', prices.repairItems?.neonCtrl);
     setVal('price_item_airSusCtrl', prices.repairItems?.airSusCtrl);
+
+    // カスタムパーツ価格
+    const custom = prices.custom || window.ShopManager.DEFAULT_PRICES.custom;
+    if (custom) {
+      setVal('price_custom_exterior_base', custom.exterior?.base);
+      setVal('price_custom_exterior_wheels', custom.exterior?.wheels);
+      setVal('price_custom_exterior_stance', custom.exterior?.stance);
+
+      if (custom.performance?.engine) {
+        for (let i = 1; i <= 5; i++) {
+          setVal(`price_custom_engine_${i}`, custom.performance.engine[i]);
+        }
+      }
+      if (custom.performance?.brakes) {
+        for (let i = 1; i <= 3; i++) {
+          setVal(`price_custom_brakes_${i}`, custom.performance.brakes[i]);
+        }
+      }
+      if (custom.performance?.suspension) {
+        for (let i = 1; i <= 5; i++) {
+          setVal(`price_custom_suspension_${i}`, custom.performance.suspension[i]);
+        }
+      }
+      if (custom.performance?.transmission) {
+        for (let i = 1; i <= 4; i++) {
+          setVal(`price_custom_transmission_${i}`, custom.performance.transmission[i]);
+        }
+      }
+      if (custom.performance?.durability) {
+        for (let i = 1; i <= 3; i++) {
+          setVal(`price_custom_durability_${i}`, custom.performance.durability[i]);
+        }
+      }
+      setVal('price_custom_turbo', custom.performance?.turbo);
+      setVal('price_custom_antiLag', custom.performance?.antiLag);
+      setVal('price_custom_harness', custom.performance?.harness);
+    }
 
     // 買取単価
     setVal('price_buyback_Steel', prices.buyback?.Steel);
@@ -120,8 +170,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!authenticatedPasscode) return;
 
     const newPrices = JSON.parse(JSON.stringify(currentPrices || window.ShopManager.DEFAULT_PRICES));
+    if (!newPrices.custom) {
+      newPrices.custom = JSON.parse(JSON.stringify(window.ShopManager.DEFAULT_PRICES.custom));
+    }
 
-    // 値の回収
+    // 修理
     newPrices.repairs.full.shop = getNumVal('price_repair_full_shop', newPrices.repairs.full.shop);
     newPrices.repairs.full.onsite = getNumVal('price_repair_full_onsite', newPrices.repairs.full.onsite);
     newPrices.repairs.engine.shop = getNumVal('price_repair_engine_shop', newPrices.repairs.engine.shop);
@@ -134,11 +187,37 @@ document.addEventListener('DOMContentLoaded', () => {
     newPrices.repairs.nosRefill = getNumVal('price_repair_nosRefill', newPrices.repairs.nosRefill);
     newPrices.repairs.nosNew = getNumVal('price_repair_nosNew', newPrices.repairs.nosNew);
 
+    // 販売品
     newPrices.repairItems.ductTape = getNumVal('price_item_ductTape', newPrices.repairItems.ductTape);
     newPrices.repairItems.carWash = getNumVal('price_item_carWash', newPrices.repairItems.carWash);
     newPrices.repairItems.neonCtrl = getNumVal('price_item_neonCtrl', newPrices.repairItems.neonCtrl);
     newPrices.repairItems.airSusCtrl = getNumVal('price_item_airSusCtrl', newPrices.repairItems.airSusCtrl);
 
+    // カスタムパーツ
+    newPrices.custom.exterior.base = getNumVal('price_custom_exterior_base', newPrices.custom.exterior.base);
+    newPrices.custom.exterior.wheels = getNumVal('price_custom_exterior_wheels', newPrices.custom.exterior.wheels);
+    newPrices.custom.exterior.stance = getNumVal('price_custom_exterior_stance', newPrices.custom.exterior.stance);
+
+    for (let i = 1; i <= 5; i++) {
+      newPrices.custom.performance.engine[i] = getNumVal(`price_custom_engine_${i}`, newPrices.custom.performance.engine[i]);
+    }
+    for (let i = 1; i <= 3; i++) {
+      newPrices.custom.performance.brakes[i] = getNumVal(`price_custom_brakes_${i}`, newPrices.custom.performance.brakes[i]);
+    }
+    for (let i = 1; i <= 5; i++) {
+      newPrices.custom.performance.suspension[i] = getNumVal(`price_custom_suspension_${i}`, newPrices.custom.performance.suspension[i]);
+    }
+    for (let i = 1; i <= 4; i++) {
+      newPrices.custom.performance.transmission[i] = getNumVal(`price_custom_transmission_${i}`, newPrices.custom.performance.transmission[i]);
+    }
+    for (let i = 1; i <= 3; i++) {
+      newPrices.custom.performance.durability[i] = getNumVal(`price_custom_durability_${i}`, newPrices.custom.performance.durability[i]);
+    }
+    newPrices.custom.performance.turbo = getNumVal('price_custom_turbo', newPrices.custom.performance.turbo);
+    newPrices.custom.performance.antiLag = getNumVal('price_custom_antiLag', newPrices.custom.performance.antiLag);
+    newPrices.custom.performance.harness = getNumVal('price_custom_harness', newPrices.custom.performance.harness);
+
+    // 素材買取
     newPrices.buyback.Steel = getNumVal('price_buyback_Steel', newPrices.buyback.Steel);
     newPrices.buyback.Iron = getNumVal('price_buyback_Iron', newPrices.buyback.Iron);
     newPrices.buyback.Scrap = getNumVal('price_buyback_Scrap', newPrices.buyback.Scrap);
@@ -150,17 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       await window.ShopManager.updateShopPrices(shopId, authenticatedPasscode, newPrices);
-      showToast("✅ 価格設定を正常に更新・保存しました！");
+      window.AppCommon.showToast("✅ 価格設定を正常に更新・保存しました！");
     } catch (err) {
       alert("保存失敗: " + (err.message || "エラーが発生しました。"));
     }
   });
-
-  function showToast(msg) {
-    toastMsg.textContent = msg;
-    toast.classList.remove('hidden');
-    setTimeout(() => {
-      toast.classList.add('hidden');
-    }, 3000);
-  }
 });
+

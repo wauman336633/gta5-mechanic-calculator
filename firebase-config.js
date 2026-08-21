@@ -112,6 +112,16 @@ const SAMPLE_SHOP_ID = 'sample';
 const SAMPLE_PASSCODE = '1111';
 const SAMPLE_RESET_INTERVAL_MS = 60 * 60 * 1000; // 1時間 (ミリ秒)
 
+// パスコードのSHA-256ハッシュ化（Web Crypto API）
+async function hashPasscode(passcode) {
+  if (!passcode) return '';
+  const encoder = new TextEncoder();
+  const data = encoder.encode(passcode);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // 深いマージを行うユーティリティ
 function mergeDeep(target, source) {
   const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
@@ -196,7 +206,9 @@ function subscribeShopPrices(shopId, callback) {
         const now = Date.now();
         if (!isNaN(lastUpdated) && (now - lastUpdated > SAMPLE_RESET_INTERVAL_MS)) {
           try {
+            const sampleHashedPasscode = await hashPasscode(SAMPLE_PASSCODE);
             await db.collection('shops').doc(cleanId).update({
+              passcodeHash: sampleHashedPasscode,
               prices: DEFAULT_PRICES,
               updatedAt: new Date().toISOString()
             });
@@ -234,11 +246,12 @@ function subscribeShopPrices(shopId, callback) {
 async function createShop(shopId, shopName, passcode) {
   initFirebase();
   const cleanId = shopId.toLowerCase().trim();
+  const hashed = await hashPasscode(passcode);
   
   const initialData = {
     id: cleanId,
     name: shopName,
-    passcode: passcode,
+    passcodeHash: hashed,
     prices: DEFAULT_PRICES,
     createdAt: new Date().toISOString()
   };
@@ -275,15 +288,18 @@ async function updateShopPrices(shopId, passcode, newPrices) {
     }
   }
 
+  const hashedInput = await hashPasscode(passcode);
+
   if (firebaseInitialized && db) {
     const docRef = db.collection('shops').doc(cleanId);
     const doc = await docRef.get();
     
     if (!doc.exists) {
+      const sampleHash = await hashPasscode(SAMPLE_PASSCODE);
       await docRef.set({
         id: cleanId,
         name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
-        passcode: cleanId === SAMPLE_SHOP_ID ? SAMPLE_PASSCODE : passcode,
+        passcodeHash: cleanId === SAMPLE_SHOP_ID ? sampleHash : hashedInput,
         prices: newPrices,
         updatedAt: new Date().toISOString()
       });
@@ -291,21 +307,35 @@ async function updateShopPrices(shopId, passcode, newPrices) {
     }
 
     const data = doc.data();
-    if (cleanId !== SAMPLE_SHOP_ID && data.passcode && data.passcode !== passcode) {
-      throw new Error("管理パスコードが一致しません。");
+    if (cleanId !== SAMPLE_SHOP_ID) {
+      // passcodeHash または 既存平文passcodeの照合
+      const isMatch = (data.passcodeHash && data.passcodeHash === hashedInput) ||
+                      (data.passcode && data.passcode === passcode);
+      if (!isMatch) {
+        throw new Error("管理パスコードが一致しません。");
+      }
     }
 
-    await docRef.update({
+    const updatePayload = {
       prices: newPrices,
       updatedAt: new Date().toISOString()
-    });
+    };
+    // 既存平文があればハッシュ値にマイグレーション
+    if (data.passcode && !data.passcodeHash) {
+      updatePayload.passcodeHash = hashedInput;
+      updatePayload.passcode = firebase.firestore.FieldValue.delete();
+    }
+
+    await docRef.update(updatePayload);
     return true;
   } else {
     // オフライン・ローカル保存
     const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
     if (cachedInfo && cleanId !== SAMPLE_SHOP_ID) {
       const parsed = JSON.parse(cachedInfo);
-      if (parsed.passcode && parsed.passcode !== passcode) {
+      const isMatch = (parsed.passcodeHash && parsed.passcodeHash === hashedInput) ||
+                      (parsed.passcode && parsed.passcode === passcode);
+      if (!isMatch) {
         throw new Error("管理パスコードが一致しません。");
       }
     }
@@ -328,16 +358,22 @@ async function verifyShopPasscode(shopId, passcode) {
     return passcode === SAMPLE_PASSCODE;
   }
 
+  const hashedInput = await hashPasscode(passcode);
+
   if (firebaseInitialized && db) {
     const doc = await db.collection('shops').doc(cleanId).get();
     if (!doc.exists) {
       return true;
     }
-    return doc.data().passcode === passcode;
+    const data = doc.data();
+    return (data.passcodeHash && data.passcodeHash === hashedInput) ||
+           (data.passcode && data.passcode === passcode);
   } else {
     const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
     if (cachedInfo) {
-      return JSON.parse(cachedInfo).passcode === passcode;
+      const parsed = JSON.parse(cachedInfo);
+      return (parsed.passcodeHash && parsed.passcodeHash === hashedInput) ||
+             (parsed.passcode && parsed.passcode === passcode);
     }
     return true;
   }
@@ -400,6 +436,7 @@ function removeShopFromHistory(shopId) {
 // グローバル公開
 window.ShopManager = {
   DEFAULT_PRICES,
+  hashPasscode,
   getShopId,
   setShopId,
   subscribeShopPrices: function(shopId, callback) {
@@ -417,3 +454,4 @@ window.ShopManager = {
   addShopToHistory,
   removeShopFromHistory
 };
+
