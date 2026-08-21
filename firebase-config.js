@@ -245,13 +245,27 @@ function subscribeShopPrices(shopId, callback) {
 // 4. 店舗の新規作成
 async function createShop(shopId, shopName, passcode) {
   initFirebase();
-  const cleanId = shopId.toLowerCase().trim();
+  const cleanId = (shopId || '').toLowerCase().trim();
+  const cleanName = (shopName || '').trim();
+
+  if (!cleanId || !cleanName || !passcode) {
+    throw new Error("すべての必須項目を入力してください。");
+  }
+
+  const shopIdPattern = /^[a-z0-9_-]{2,30}$/;
+  if (!shopIdPattern.test(cleanId)) {
+    throw new Error("店舗IDは2〜30文字の半角英数字、ハイフン(-)、アンダースコア(_)のみ使用できます。");
+  }
+
+  if (cleanName.length > 50) {
+    throw new Error("店舗名は50文字以内で入力してください。");
+  }
+
   const hashed = await hashPasscode(passcode);
   
-  const initialData = {
+  const publicData = {
     id: cleanId,
-    name: shopName,
-    passcodeHash: hashed,
+    name: cleanName,
     prices: DEFAULT_PRICES,
     createdAt: new Date().toISOString()
   };
@@ -262,14 +276,19 @@ async function createShop(shopId, shopName, passcode) {
     if (doc.exists) {
       throw new Error("指定された店舗IDは既に登録されています。別のIDをお試しください。");
     }
-    await docRef.set(initialData);
+
+    const batch = db.batch();
+    batch.set(docRef, publicData);
+    const secretRef = docRef.collection('auth').doc('secret');
+    batch.set(secretRef, { passcodeHash: hashed });
+    await batch.commit();
   } else {
     // ローカルでのシミュレーション保存
     if (localStorage.getItem(`shop_info_${cleanId}`)) {
       throw new Error("指定された店舗IDは既に登録されています。");
     }
-    localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify(initialData));
-    localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({ id: cleanId, name: shopName, prices: DEFAULT_PRICES }));
+    localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify({ ...publicData, passcodeHash: hashed }));
+    localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({ id: cleanId, name: cleanName, prices: DEFAULT_PRICES }));
   }
 
   setShopId(cleanId);
@@ -279,7 +298,7 @@ async function createShop(shopId, shopName, passcode) {
 // 5. 価格設定の更新
 async function updateShopPrices(shopId, passcode, newPrices) {
   initFirebase();
-  const cleanId = shopId.toLowerCase().trim();
+  const cleanId = (shopId || '').toLowerCase().trim();
 
   // sample店舗のパスコード検証（1111固定）
   if (cleanId === SAMPLE_SHOP_ID) {
@@ -296,33 +315,37 @@ async function updateShopPrices(shopId, passcode, newPrices) {
     
     if (!doc.exists) {
       const sampleHash = await hashPasscode(SAMPLE_PASSCODE);
-      await docRef.set({
+      const batch = db.batch();
+      batch.set(docRef, {
         id: cleanId,
         name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
         passcodeHash: cleanId === SAMPLE_SHOP_ID ? sampleHash : hashedInput,
         prices: newPrices,
         updatedAt: new Date().toISOString()
       });
+      batch.set(docRef.collection('auth').doc('secret'), {
+        passcodeHash: cleanId === SAMPLE_SHOP_ID ? sampleHash : hashedInput
+      });
+      await batch.commit();
       return true;
     }
 
-    const data = doc.data();
-    if (cleanId !== SAMPLE_SHOP_ID) {
-      // passcodeHash または 既存平文passcodeの照合
-      const isMatch = (data.passcodeHash && data.passcodeHash === hashedInput) ||
-                      (data.passcode && data.passcode === passcode);
-      if (!isMatch) {
-        throw new Error("管理パスコードが一致しません。");
-      }
+    // パスコード照合
+    const isValid = await verifyShopPasscode(cleanId, passcode);
+    if (!isValid) {
+      throw new Error("管理パスコードが一致しません。");
     }
 
     const updatePayload = {
+      id: cleanId,
+      passcodeHash: hashedInput, // Firestoreルール照合用
       prices: newPrices,
       updatedAt: new Date().toISOString()
     };
-    // 既存平文があればハッシュ値にマイグレーション
-    if (data.passcode && !data.passcodeHash) {
-      updatePayload.passcodeHash = hashedInput;
+
+    // レガシー店舗の場合、平文passcodeがあれば削除
+    const data = doc.data();
+    if (data && data.passcode) {
       updatePayload.passcode = firebase.firestore.FieldValue.delete();
     }
 
@@ -352,7 +375,7 @@ async function updateShopPrices(shopId, passcode, newPrices) {
 // 6. 店舗検証（パスコードチェック）
 async function verifyShopPasscode(shopId, passcode) {
   initFirebase();
-  const cleanId = shopId.toLowerCase().trim();
+  const cleanId = (shopId || '').toLowerCase().trim();
 
   if (cleanId === SAMPLE_SHOP_ID) {
     return passcode === SAMPLE_PASSCODE;
@@ -361,9 +384,22 @@ async function verifyShopPasscode(shopId, passcode) {
   const hashedInput = await hashPasscode(passcode);
 
   if (firebaseInitialized && db) {
-    const doc = await db.collection('shops').doc(cleanId).get();
+    const docRef = db.collection('shops').doc(cleanId);
+    
+    // 1. 非公開auth/secretドキュメントをチェック（新方式）
+    try {
+      const secretDoc = await docRef.collection('auth').doc('secret').get();
+      if (secretDoc.exists) {
+        return secretDoc.data().passcodeHash === hashedInput;
+      }
+    } catch (e) {
+      // 権限エラー等で読めない場合は公開ドキュメントのレガシーチェックへ
+    }
+
+    // 2. 公開ドキュメント内のレガシー値チェック
+    const doc = await docRef.get();
     if (!doc.exists) {
-      return true;
+      return false;
     }
     const data = doc.data();
     return (data.passcodeHash && data.passcodeHash === hashedInput) ||
@@ -375,7 +411,7 @@ async function verifyShopPasscode(shopId, passcode) {
       return (parsed.passcodeHash && parsed.passcodeHash === hashedInput) ||
              (parsed.passcode && parsed.passcode === passcode);
     }
-    return true;
+    return false;
   }
 }
 
@@ -433,8 +469,6 @@ function removeShopFromHistory(shopId) {
   return history;
 }
 
-// Webhook URL 定数（Discord通知用）
-const DISCORD_FEEDBACK_WEBHOOK_URL = "https://discord.com/api/webhooks/1540383569887625278/T0k6TtneYlNj8VZtcXcIObb4yODX0lW7Ijxaa9awFHf2z7JrBqMmHZQJLgDf5ZpKOka1";
 const GITHUB_REPO = "wauman336633/gta5-mechanic-calculator";
 
 // フィードバック（不具合・要望）送信処理
@@ -459,7 +493,7 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
   
   const githubIssueUrl = `https://github.com/${GITHUB_REPO}/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}&labels=${encodeURIComponent(currentTypeInfo.label)}`;
 
-  // 1. Firestoreへ保存
+  // Firestoreへ保存
   if (db) {
     try {
       await db.collection('feedbacks').add({
@@ -476,39 +510,6 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
     } catch (dbErr) {
       console.error("Firestore feedback save error:", dbErr);
       throw new Error("データの保存に失敗しました。時間をおいて再試行してください。");
-    }
-  }
-
-  // 2. Discord Webhookへ通知
-  if (DISCORD_FEEDBACK_WEBHOOK_URL && DISCORD_FEEDBACK_WEBHOOK_URL.trim().startsWith('http')) {
-    const embedColor = type === 'bug' ? 0xff4d4f : (type === 'feature' ? 0x1890ff : 0xfaad14);
-    const discordPayload = {
-      embeds: [
-        {
-          title: `${currentTypeInfo.name}: ${summaryTitle}${cleanContent.length > 40 ? '...' : ''}`,
-          url: githubIssueUrl,
-          description: `>>> ${cleanContent}\n\n[🚀 **GitHubでIssueを作成する（クリック）**](${githubIssueUrl})`,
-          color: embedColor,
-          fields: [
-            { name: "📍 発生ページ", value: pageUrl, inline: true },
-            { name: "🏢 対象店舗", value: `${shopName || '未指定'} (\`${shopId || 'なし'}\`)`, inline: true }
-          ],
-          footer: {
-            text: "Mechanic Calculator Feedback System"
-          },
-          timestamp: new Date().toISOString()
-        }
-      ]
-    };
-
-    try {
-      await fetch(DISCORD_FEEDBACK_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(discordPayload)
-      });
-    } catch (webhookErr) {
-      console.warn("Discord Webhook sending failed:", webhookErr);
     }
   }
 

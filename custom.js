@@ -146,49 +146,106 @@ document.addEventListener('DOMContentLoaded', () => {
     window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
       if (currentShopNameEl) currentShopNameEl.textContent = shopInfo.name;
       if (shopInfo.prices) {
-        if (shopInfo.prices.custom) PRICES = shopInfo.prices.custom;
-        if (shopInfo.prices.repairItems) PRICES.items = shopInfo.prices.repairItems;
+        if (shopInfo.prices.repairs) {
+          PRICES.repairs = shopInfo.prices.repairs;
+        } else if (shopInfo.prices.custom && shopInfo.prices.custom.repairs) {
+          PRICES.repairs = shopInfo.prices.custom.repairs;
+        }
+
+        if (shopInfo.prices.repairItems) {
+          PRICES.items = shopInfo.prices.repairItems;
+        } else if (shopInfo.prices.custom && shopInfo.prices.custom.items) {
+          PRICES.items = shopInfo.prices.custom.items;
+        }
+
+        if (shopInfo.prices.custom) {
+          if (shopInfo.prices.custom.exterior) PRICES.exterior = shopInfo.prices.custom.exterior;
+          if (shopInfo.prices.custom.performance) PRICES.performance = shopInfo.prices.custom.performance;
+        }
+
         updateDynamicPriceLabels();
         calculateTotal();
       }
     });
   }
 
+  // DOM Elements
+  const chkTurbo = document.getElementById('chkTurbo');
+  const chkAntiLag = document.getElementById('chkAntiLag');
+  const chkHarness = document.getElementById('chkHarness');
+
+  const cntNosRefill = document.getElementById('cntNosRefill');
+  const cntNosNew = document.getElementById('cntNosNew');
+  const cntExteriorBase = document.getElementById('cntExteriorBase');
+  const cntWheels = document.getElementById('cntWheels');
+  const cntStance = document.getElementById('cntStance');
+  const cntDuctTape = document.getElementById('cntDuctTape');
+  const cntCarWash = document.getElementById('cntCarWash');
+  const cntNeonCtrl = document.getElementById('cntNeonCtrl');
+  const cntAirSusCtrl = document.getElementById('cntAirSusCtrl');
+
+  const btnDisc3 = document.getElementById('btnDisc3');
+  const btnDisc5 = document.getElementById('btnDisc5');
+  const btnDisc7 = document.getElementById('btnDisc7');
+  const customDiscountType = document.getElementById('customDiscountType');
+  const customDiscountVal = document.getElementById('customDiscountVal');
+
+  const subtotalDisplay = document.getElementById('subtotalDisplay');
+  const totalDisplay = document.getElementById('totalDisplay');
+  const vaultDisplay = document.getElementById('vaultDisplay');
+  const discountTagDisplay = document.getElementById('discountTagDisplay');
+
+  const btnCopyNumber = document.getElementById('btnCopyNumber');
+  const btnCopyVault = document.getElementById('btnCopyVault');
+  const btnCopyVaultSummary = document.getElementById('btnCopyVaultSummary');
+  const btnCopyOwnCar = document.getElementById('btnCopyOwnCar');
+  const btnResetCustom = document.getElementById('btnResetCustom');
+
   // Calculate Total & Vault Amount (30%)
   function calculateTotal() {
     let subtotal = 0;
 
     // NOS
-    subtotal += state.repairs.nosRefillCount * PRICES.repairs.nosRefill;
-    subtotal += state.repairs.nosNewCount * PRICES.repairs.nosNew;
+    if (PRICES.repairs) {
+      if (PRICES.repairs.nosRefill) subtotal += state.repairs.nosRefillCount * PRICES.repairs.nosRefill;
+      if (PRICES.repairs.nosNew) subtotal += state.repairs.nosNewCount * PRICES.repairs.nosNew;
+    }
 
     // Exterior
-    subtotal += state.exterior.base * PRICES.exterior.base;
-    subtotal += state.exterior.wheels * PRICES.exterior.wheels;
-    subtotal += state.exterior.stance * PRICES.exterior.stance;
+    if (PRICES.exterior) {
+      if (PRICES.exterior.base) subtotal += state.exterior.base * PRICES.exterior.base;
+      if (PRICES.exterior.wheels) subtotal += state.exterior.wheels * PRICES.exterior.wheels;
+      if (PRICES.exterior.stance) subtotal += state.exterior.stance * PRICES.exterior.stance;
+    }
 
     // Performance
-    subtotal += PRICES.performance.engine[state.performance.engine];
-    subtotal += PRICES.performance.brakes[state.performance.brakes];
-    subtotal += PRICES.performance.suspension[state.performance.suspension];
-    subtotal += PRICES.performance.transmission[state.performance.transmission];
+    if (PRICES.performance) {
+      if (PRICES.performance.engine) subtotal += PRICES.performance.engine[state.performance.engine] || 0;
+      if (PRICES.performance.brakes) subtotal += PRICES.performance.brakes[state.performance.brakes] || 0;
+      if (PRICES.performance.suspension) subtotal += PRICES.performance.suspension[state.performance.suspension] || 0;
+      if (PRICES.performance.transmission) subtotal += PRICES.performance.transmission[state.performance.transmission] || 0;
 
-    // Durability Parts
-    subtotal += PRICES.performance.durability[state.performance.durabilityParts.oilPump];
-    subtotal += PRICES.performance.durability[state.performance.durabilityParts.battery];
-    subtotal += PRICES.performance.durability[state.performance.durabilityParts.fuelTank];
-    subtotal += PRICES.performance.durability[state.performance.durabilityParts.driveShaft];
-    subtotal += PRICES.performance.durability[state.performance.durabilityParts.cylinder];
+      // Durability Parts
+      if (PRICES.performance.durability) {
+        subtotal += PRICES.performance.durability[state.performance.durabilityParts.oilPump] || 0;
+        subtotal += PRICES.performance.durability[state.performance.durabilityParts.battery] || 0;
+        subtotal += PRICES.performance.durability[state.performance.durabilityParts.fuelTank] || 0;
+        subtotal += PRICES.performance.durability[state.performance.durabilityParts.driveShaft] || 0;
+        subtotal += PRICES.performance.durability[state.performance.durabilityParts.cylinder] || 0;
+      }
 
-    if (state.performance.turbo) subtotal += PRICES.performance.turbo;
-    if (state.performance.antiLag) subtotal += PRICES.performance.antiLag;
-    if (state.performance.harness) subtotal += PRICES.performance.harness;
+      if (state.performance.turbo && PRICES.performance.turbo) subtotal += PRICES.performance.turbo;
+      if (state.performance.antiLag && PRICES.performance.antiLag) subtotal += PRICES.performance.antiLag;
+      if (state.performance.harness && PRICES.performance.harness) subtotal += PRICES.performance.harness;
+    }
 
     // Items
-    subtotal += state.items.ductTape * PRICES.items.ductTape;
-    subtotal += state.items.carWash * PRICES.items.carWash;
-    subtotal += state.items.neonCtrl * PRICES.items.neonCtrl;
-    subtotal += state.items.airSusCtrl * PRICES.items.airSusCtrl;
+    if (PRICES.items) {
+      if (PRICES.items.ductTape) subtotal += state.items.ductTape * PRICES.items.ductTape;
+      if (PRICES.items.carWash) subtotal += state.items.carWash * PRICES.items.carWash;
+      if (PRICES.items.neonCtrl) subtotal += state.items.neonCtrl * PRICES.items.neonCtrl;
+      if (PRICES.items.airSusCtrl) subtotal += state.items.airSusCtrl * PRICES.items.airSusCtrl;
+    }
 
     // Discounts
     let finalTotal = subtotal;
@@ -211,19 +268,21 @@ document.addEventListener('DOMContentLoaded', () => {
     finalTotal = Math.round(finalTotal);
     const vaultAmount = Math.round(finalTotal * 0.3);
 
-    subtotalDisplay.textContent = formatJPY(subtotal);
-    totalDisplay.textContent = formatJPY(finalTotal);
-    vaultDisplay.textContent = formatJPY(vaultAmount);
+    if (subtotalDisplay) subtotalDisplay.textContent = formatJPY(subtotal);
+    if (totalDisplay) totalDisplay.textContent = formatJPY(finalTotal);
+    if (vaultDisplay) vaultDisplay.textContent = formatJPY(vaultAmount);
 
-    if (hasDiscount) {
-      discountTagDisplay.classList.remove('hidden');
-      if (state.discount.preset > 0) {
-        discountTagDisplay.textContent = `${state.discount.preset / 10}割OFF適用中`;
+    if (discountTagDisplay) {
+      if (hasDiscount) {
+        discountTagDisplay.classList.remove('hidden');
+        if (state.discount.preset > 0) {
+          discountTagDisplay.textContent = `${state.discount.preset / 10}割OFF適用中`;
+        } else {
+          discountTagDisplay.textContent = '割引適用中';
+        }
       } else {
-        discountTagDisplay.textContent = '割引適用中';
+        discountTagDisplay.classList.add('hidden');
       }
-    } else {
-      discountTagDisplay.classList.add('hidden');
     }
 
     return { subtotal, finalTotal, vaultAmount };
@@ -275,9 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Performance Checkboxes
-  chkTurbo.addEventListener('change', (e) => { state.performance.turbo = e.target.checked; calculateTotal(); });
-  chkAntiLag.addEventListener('change', (e) => { state.performance.antiLag = e.target.checked; calculateTotal(); });
-  chkHarness.addEventListener('change', (e) => { state.performance.harness = e.target.checked; calculateTotal(); });
+  if (chkTurbo) chkTurbo.addEventListener('change', (e) => { state.performance.turbo = e.target.checked; calculateTotal(); });
+  if (chkAntiLag) chkAntiLag.addEventListener('change', (e) => { state.performance.antiLag = e.target.checked; calculateTotal(); });
+  if (chkHarness) chkHarness.addEventListener('change', (e) => { state.performance.harness = e.target.checked; calculateTotal(); });
 
   // Input Counters Listener
   document.querySelectorAll('.cnt-input').forEach(input => {
@@ -338,7 +397,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Level Selection Buttons Binding
-
   levelGroups.forEach(group => {
     const container = document.getElementById(group.elementId);
     const display = document.getElementById(group.displayId);
@@ -376,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (item.btn) {
       item.btn.addEventListener('click', () => {
         const isAlreadyActive = item.btn.classList.contains('active');
-        discountBtns.forEach(b => b.btn.classList.remove('active'));
+        discountBtns.forEach(b => { if (b.btn) b.btn.classList.remove('active'); });
 
         if (isAlreadyActive) {
           state.discount.preset = 0;
@@ -389,91 +447,109 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  customDiscountType.addEventListener('change', (e) => {
-    state.discount.customType = e.target.value;
-    const isNone = e.target.value === 'none';
-    customDiscountVal.disabled = isNone;
-    if (isNone) {
-      customDiscountVal.value = 0;
-      state.discount.customValue = 0;
-    }
-    calculateTotal();
-  });
+  if (customDiscountType) {
+    customDiscountType.addEventListener('change', (e) => {
+      state.discount.customType = e.target.value;
+      const isNone = e.target.value === 'none';
+      if (customDiscountVal) {
+        customDiscountVal.disabled = isNone;
+        if (isNone) {
+          customDiscountVal.value = 0;
+          state.discount.customValue = 0;
+        }
+      }
+      calculateTotal();
+    });
+  }
 
-  customDiscountVal.addEventListener('input', (e) => {
-    state.discount.customValue = parseFloat(e.target.value) || 0;
-    calculateTotal();
-  });
+  if (customDiscountVal) {
+    customDiscountVal.addEventListener('input', (e) => {
+      state.discount.customValue = parseFloat(e.target.value) || 0;
+      calculateTotal();
+    });
+  }
 
   // Copy Actions
-  btnCopyNumber.addEventListener('click', () => {
-    const { finalTotal } = calculateTotal();
-    const str = finalTotal.toString();
-    copyToClipboard(str, `請求額 「 ${str} 」 をコピーしました！`);
-  });
+  if (btnCopyNumber) {
+    btnCopyNumber.addEventListener('click', () => {
+      const { finalTotal } = calculateTotal();
+      const str = finalTotal.toString();
+      copyToClipboard(str, `請求額 「 ${str} 」 をコピーしました！`);
+    });
+  }
 
-  btnCopyVault.addEventListener('click', () => {
-    const { vaultAmount } = calculateTotal();
-    const str = vaultAmount.toString();
-    copyToClipboard(str, `金庫額(3割) 「 ${str} 」 をコピーしました！`);
-  });
+  if (btnCopyVault) {
+    btnCopyVault.addEventListener('click', () => {
+      const { vaultAmount } = calculateTotal();
+      const str = vaultAmount.toString();
+      copyToClipboard(str, `金庫額(3割) 「 ${str} 」 をコピーしました！`);
+    });
+  }
 
-  btnCopyVaultSummary.addEventListener('click', () => {
-    const { vaultAmount } = calculateTotal();
-    const summary = getSummaryText();
-    const text = `${vaultAmount} ${summary}`;
-    copyToClipboard(text, `「 ${text} 」 をコピーしました！`);
-  });
+  if (btnCopyVaultSummary) {
+    btnCopyVaultSummary.addEventListener('click', () => {
+      const { vaultAmount } = calculateTotal();
+      const summary = getSummaryText();
+      const text = `${vaultAmount} ${summary}`;
+      copyToClipboard(text, `「 ${text} 」 をコピーしました！`);
+    });
+  }
 
-  btnCopyOwnCar.addEventListener('click', () => {
-    const { vaultAmount } = calculateTotal();
-    const summary = getSummaryText();
-    const text = `自車 ${vaultAmount} ${summary}`;
-    copyToClipboard(text, `「 ${text} 」 をコピーしました！`);
-  });
+  if (btnCopyOwnCar) {
+    btnCopyOwnCar.addEventListener('click', () => {
+      const { vaultAmount } = calculateTotal();
+      const summary = getSummaryText();
+      const text = `自車 ${vaultAmount} ${summary}`;
+      copyToClipboard(text, `「 ${text} 」 をコピーしました！`);
+    });
+  }
 
   // Reset
-  btnResetCustom.addEventListener('click', () => {
-    cntNosRefill.value = 0;
-    cntNosNew.value = 0;
-    cntExteriorBase.value = 0;
-    cntWheels.value = 0;
-    cntStance.value = 0;
-    cntDuctTape.value = 0;
-    cntCarWash.value = 0;
-    cntNeonCtrl.value = 0;
-    cntAirSusCtrl.value = 0;
+  if (btnResetCustom) {
+    btnResetCustom.addEventListener('click', () => {
+      if (cntNosRefill) cntNosRefill.value = 0;
+      if (cntNosNew) cntNosNew.value = 0;
+      if (cntExteriorBase) cntExteriorBase.value = 0;
+      if (cntWheels) cntWheels.value = 0;
+      if (cntStance) cntStance.value = 0;
+      if (cntDuctTape) cntDuctTape.value = 0;
+      if (cntCarWash) cntCarWash.value = 0;
+      if (cntNeonCtrl) cntNeonCtrl.value = 0;
+      if (cntAirSusCtrl) cntAirSusCtrl.value = 0;
 
-    state.repairs = { nosRefillCount: 0, nosNewCount: 0 };
-    state.exterior = { base: 0, wheels: 0, stance: 0 };
-    state.items = { ductTape: 0, carWash: 0, neonCtrl: 0, airSusCtrl: 0 };
+      state.repairs = { nosRefillCount: 0, nosNewCount: 0 };
+      state.exterior = { base: 0, wheels: 0, stance: 0 };
+      state.items = { ductTape: 0, carWash: 0, neonCtrl: 0, airSusCtrl: 0 };
 
-    levelGroups.forEach(group => {
-      const container = document.getElementById(group.elementId);
-      const display = document.getElementById(group.displayId);
-      if (container && display) {
-        container.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
-        display.textContent = '未選択';
+      levelGroups.forEach(group => {
+        const container = document.getElementById(group.elementId);
+        const display = document.getElementById(group.displayId);
+        if (container && display) {
+          container.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
+          display.textContent = '未選択';
+        }
+        group.setValue(0);
+      });
+
+      if (chkTurbo) chkTurbo.checked = false;
+      if (chkAntiLag) chkAntiLag.checked = false;
+      if (chkHarness) chkHarness.checked = false;
+      state.performance.turbo = false;
+      state.performance.antiLag = false;
+      state.performance.harness = false;
+
+      state.discount = { preset: 0, customType: 'none', customValue: 0 };
+      discountBtns.forEach(b => { if (b.btn) b.btn.classList.remove('active'); });
+      if (customDiscountType) customDiscountType.value = 'none';
+      if (customDiscountVal) {
+        customDiscountVal.value = 0;
+        customDiscountVal.disabled = true;
       }
-      group.setValue(0);
+
+      calculateTotal();
+      showToast('すべての選択をリセットしました');
     });
-
-    chkTurbo.checked = false;
-    chkAntiLag.checked = false;
-    chkHarness.checked = false;
-    state.performance.turbo = false;
-    state.performance.antiLag = false;
-    state.performance.harness = false;
-
-    state.discount = { preset: 0, customType: 'none', customValue: 0 };
-    discountBtns.forEach(b => b.btn.classList.remove('active'));
-    customDiscountType.value = 'none';
-    customDiscountVal.value = 0;
-    customDiscountVal.disabled = true;
-
-    calculateTotal();
-    showToast('すべての選択をリセットしました');
-  });
+  }
 
   updateDynamicPriceLabels();
   calculateTotal();

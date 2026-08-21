@@ -124,11 +124,16 @@
   </div>
 
   <script src="firebase-config.js"></script>
+  <script src="common.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const historyGrid = document.getElementById('historyGrid');
       const formDirectAccess = document.getElementById('formDirectAccess');
       const directShopId = document.getElementById('directShopId');
+
+      function escapeText(str) {
+        return window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str || '').replace(/[&<>"']/g, '');
+      }
 
       function renderHistory() {
         if (!window.ShopManager) return;
@@ -142,20 +147,23 @@
         historyGrid.innerHTML = history.map(item => {
           const dateStr = item.lastAccessedAt ? new Date(item.lastAccessedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
           const isSample = item.id === 'sample';
+          const safeName = escapeText(item.name);
+          const safeId = escapeText(item.id);
+          const encodedId = encodeURIComponent(item.id || '');
           return `
             <div class="history-card ${isSample ? 'sample-card' : ''}">
               <div class="history-card-header">
                 <span class="history-shop-badge">${isSample ? '🔰 サンプル店舗' : '🏢 店舗'}</span>
-                ${dateStr ? `<span class="history-date">${dateStr}</span>` : ''}
+                ${dateStr ? `<span class="history-date">${escapeText(dateStr)}</span>` : ''}
               </div>
-              <div class="history-shop-name">${item.name}</div>
-              <div class="history-shop-id">ID: <code>${item.id}</code></div>
+              <div class="history-shop-name">${safeName}</div>
+              <div class="history-shop-id">ID: <code>${safeId}</code></div>
               <div class="history-card-actions">
-                <a href="repair.html?shop=${encodeURIComponent(item.id)}" class="btn-open-shop">
+                <a href="repair.html?shop=${encodedId}" class="btn-open-shop">
                   計算機を開く ➔
                 </a>
                 ${!isSample ? `
-                  <button type="button" class="btn-remove-history" data-id="${item.id}" title="履歴から削除">
+                  <button type="button" class="btn-remove-history" data-id="${safeId}" title="履歴から削除">
                     🗑️
                   </button>
                 ` : ''}
