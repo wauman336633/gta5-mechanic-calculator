@@ -518,10 +518,10 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
   // 2. GASプロキシ経由でDiscordへ通知（設定されている場合）
   if (GAS_FEEDBACK_API_URL && GAS_FEEDBACK_API_URL.trim().startsWith('http')) {
     try {
-      fetch(GAS_FEEDBACK_API_URL, {
+      await fetch(GAS_FEEDBACK_API_URL, {
         method: 'POST',
         mode: 'no-cors', // CORS制約を回避して送信
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           type,
           typeName: currentTypeInfo.name,
@@ -532,11 +532,9 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
           userAgent: navigator.userAgent,
           githubIssueUrl
         })
-      }).catch(gasErr => {
-        console.warn("GAS notification sending failed:", gasErr);
       });
-    } catch (e) {
-      console.warn("GAS call error:", e);
+    } catch (gasErr) {
+      console.warn("GAS notification sending failed:", gasErr);
     }
   }
 
