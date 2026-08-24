@@ -470,6 +470,8 @@ function removeShopFromHistory(shopId) {
 }
 
 const GITHUB_REPO = "wauman336633/gta5-mechanic-calculator";
+// Google Apps Script (GAS) 中継エンドポイント（Discord Webhook 隠蔽用プロキシ）
+const GAS_FEEDBACK_API_URL = "https://script.google.com/macros/s/AKfycbxQ5RLudxU6mMbb2iG_5og86nMyNfekVyMim4aMHX2-1XZgSnVhboJ_Ynx5rH2vxpfZ/exec";
 
 // フィードバック（不具合・要望）送信処理
 async function sendFeedback({ type = 'bug', content = '', page = '', shopId = '', shopName = '' }) {
@@ -493,7 +495,7 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
   
   const githubIssueUrl = `https://github.com/${GITHUB_REPO}/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}&labels=${encodeURIComponent(currentTypeInfo.label)}`;
 
-  // Firestoreへ保存
+  // 1. Firestoreへ保存
   if (db) {
     try {
       await db.collection('feedbacks').add({
@@ -510,6 +512,29 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
     } catch (dbErr) {
       console.error("Firestore feedback save error:", dbErr);
       throw new Error("データの保存に失敗しました。時間をおいて再試行してください。");
+    }
+  }
+
+  // 2. GASプロキシ経由でDiscordへ通知（設定されている場合）
+  if (GAS_FEEDBACK_API_URL && GAS_FEEDBACK_API_URL.trim().startsWith('http')) {
+    try {
+      await fetch(GAS_FEEDBACK_API_URL, {
+        method: 'POST',
+        mode: 'no-cors', // CORS制約を回避して送信
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          type,
+          typeName: currentTypeInfo.name,
+          content: cleanContent,
+          page: pageUrl,
+          shopId: shopId || 'unknown',
+          shopName: shopName || '',
+          userAgent: navigator.userAgent,
+          githubIssueUrl
+        })
+      });
+    } catch (gasErr) {
+      console.warn("GAS notification sending failed:", gasErr);
     }
   }
 
