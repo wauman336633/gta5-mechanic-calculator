@@ -50,7 +50,7 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  padding-bottom: 120px; /* Space for bottom sticky bar */
+  padding-bottom: 170px; /* Space for bottom sticky bar */
 }
 
 /* Main Container */
@@ -840,7 +840,7 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border-top: 3px solid var(--accent-blue);
   box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.7);
-  padding: 12px 20px;
+  padding: 8px 18px;
 }
 
 .summary-inner {
@@ -850,20 +850,20 @@ body {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
 .summary-amount-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .summary-amount-block .amount-sub {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   font-weight: 700;
 }
@@ -884,15 +884,15 @@ body {
 .amounts-grid {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .amount-card-inline {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: #020617;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--border-color);
 }
@@ -903,34 +903,34 @@ body {
 }
 
 .main-label, .vault-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: var(--text-secondary);
 }
 
 .total-price {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.7rem;
+  font-size: 1.55rem;
   font-weight: 800;
   color: #ffffff;
 }
 
 .vault-price {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.7rem;
+  font-size: 1.55rem;
   font-weight: 800;
   color: var(--accent-cyan);
 }
 
 /* Inline Icon Copy Buttons next to main totals */
 .btn-icon-only {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  font-size: 1.15rem;
+  border-radius: 6px;
+  font-size: 1.05rem;
   cursor: pointer;
   background: #1e293b;
   border: 1.5px solid var(--border-color);
@@ -949,20 +949,20 @@ body {
 .action-buttons-grid {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-copy-sub {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
+  gap: 6px;
+  padding: 8px 14px;
   background: #1e293b;
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: #ffffff;
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -988,6 +988,9 @@ body {
 }
 
 @media (max-width: 680px) {
+  body {
+    padding-bottom: 210px; /* Space for stacked 2-tier bottom bar */
+  }
   .summary-bar {
     padding: 8px 12px;
   }
@@ -1016,9 +1019,9 @@ body {
     font-size: 0.68rem;
   }
   .btn-icon-only {
-    width: 34px;
-    height: 34px;
-    font-size: 1rem;
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
     flex-shrink: 0;
   }
   .action-buttons-grid {
