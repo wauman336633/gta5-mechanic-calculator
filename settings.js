@@ -1,7 +1,7 @@
 // Settings Page Logic - Dynamic Item Configuration Editor
 document.addEventListener('DOMContentLoaded', () => {
   const shopId = window.ShopManager.getShopId();
-  let currentConfig = null;
+  let currentConfig = JSON.parse(JSON.stringify(window.ShopManager.DEFAULT_CUSTOM_CONFIG));
   let authenticatedPasscode = null;
 
   // DOM Elements

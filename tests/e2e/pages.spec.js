@@ -139,6 +139,6 @@ test.describe('Settings Dynamic Configuration E2E Interaction', () => {
 
     // 買取素材リストのアイテムが表示されていること
     const buybackItems = page.locator('#list_buyback .settings-item-row');
-    expect(await buybackItems.count()).toBeGreaterThan(0);
+    await expect(buybackItems.first()).toBeVisible();
   });
 });
