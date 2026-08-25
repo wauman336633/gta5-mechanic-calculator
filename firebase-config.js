@@ -793,7 +793,7 @@ function removeShopFromHistory(shopId) {
 
 const GITHUB_REPO = "wauman336633/gta5-mechanic-calculator";
 // Google Apps Script (GAS) 中継エンドポイント（Discord Webhook 隠蔽用プロキシ）
-const GAS_FEEDBACK_API_URL = "https://script.google.com/macros/s/AKfycbxQ5RLudxU6mMbb2iG_5og86nMyNfekVyMim4aMHX2-1XZgSnVhboJ_Ynx5rH2vxpfZ/exec";
+const GAS_FEEDBACK_API_URL = "https://script.google.com/macros/s/AKfycbxkZnUvD_t-g5Ypm3mtdQO3_TePZdq6KiIJOrEbfRnPpRtnuJCaTB0JMLAptYrssuUE/exec";
 
 // フィードバック（不具合・要望）送信処理
 async function sendFeedback({ type = 'bug', content = '', page = '', shopId = '', shopName = '' }) {
