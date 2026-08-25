@@ -1153,7 +1153,7 @@ body {
 }
 
 .modal-overlay.hidden {
-  display: none;
+  display: none !important;
 }
 
 .modal-card {
@@ -1968,6 +1968,75 @@ body {
   .feedback-type-selector {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   Dynamic Settings Editor UI
+   ========================================================================== */
+.settings-section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 18px;
+}
+
+.settings-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.settings-section-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-section-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-sub-action {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sub-action:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent-blue);
+  color: var(--text-primary);
+}
+
+.btn-add-item {
+  background: var(--accent-blue-bg);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+}
+
+.btn-add-item:hover {
+  background: var(--accent-blue);
+  color: #ffffff;
+}
+
+.settings-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 

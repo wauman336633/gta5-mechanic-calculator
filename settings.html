@@ -102,12 +102,12 @@
         <div class="card" style="padding: 24px; margin-bottom: 24px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
             <div>
-              <h2 style="font-size: 1.4rem; font-weight: 800;">⚙️ 価格設定の一括編集</h2>
-              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">変更した価格は店舗の全端末にリアルタイムで反映されます。</p>
+              <h2 style="font-size: 1.4rem; font-weight: 800;">⚙️ 計算項目・価格の柔軟設定</h2>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">利用組織の形に合わせて項目の追加・削除・名称変更・価格変更・並び替えが可能です。変更は全端末にリアルタイム同期されます。</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
               <a href="repair.html" class="btn-secondary" style="font-size: 0.95rem; padding: 10px 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">✖ 閉じる</a>
-              <button type="submit" class="btn-primary" style="font-size: 1.05rem; padding: 12px 24px;">💾 設定を保存する</button>
+              <button type="submit" class="btn-primary" id="btnSaveSettings" style="font-size: 1.05rem; padding: 12px 24px;">💾 設定を保存する</button>
             </div>
           </div>
 
@@ -118,178 +118,136 @@
             <button type="button" class="settings-tab-btn" data-tab="tabBuyback">📦 素材買取</button>
           </div>
 
-          <!-- Tab Pane 1: 修理料金・販売品 -->
+          <!-- Tab Pane 1: 修理・販売品 -->
           <div id="tabRepairs" class="settings-tab-pane active">
-            <div class="settings-section-title">🔧 修理基本料金</div>
-            <div class="settings-grid">
-              <div class="setting-item-card">
-                <div class="setting-item-title">全修理 (店内)</div>
-                <input type="number" id="price_repair_full_shop" class="form-input" required>
+            <!-- 1. 基本修理 -->
+            <div class="settings-section-card">
+              <div class="settings-section-header">
+                <div class="settings-section-title">🔧 修理基本作業 (店内 / 出張 2価格型)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="repairs.baseRepairs">➕ 項目追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="repairs.baseRepairs">🔄 デフォルトに戻す</button>
+                </div>
               </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">全修理 (出張)</div>
-                <input type="number" id="price_repair_full_onsite" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">エンジン修理 (店内)</div>
-                <input type="number" id="price_repair_engine_shop" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">エンジン修理 (出張)</div>
-                <input type="number" id="price_repair_engine_onsite" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">ボディ修理 (店内)</div>
-                <input type="number" id="price_repair_body_shop" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">ボディ修理 (出張)</div>
-                <input type="number" id="price_repair_body_onsite" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">劣化パーツ単価 (各個)</div>
-                <input type="number" id="price_repair_degraded" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">タイヤ交換 (1本あたり)</div>
-                <input type="number" id="price_repair_tires" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">航空機・船追加作業費</div>
-                <input type="number" id="price_repair_aircraft" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">NOS補充 (1回)</div>
-                <input type="number" id="price_repair_nosRefill" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">NOS新規 (1回)</div>
-                <input type="number" id="price_repair_nosNew" class="form-input" required>
+              <div class="settings-items-list" id="list_repairs_baseRepairs">
+                <!-- JSで動的レンダリング -->
               </div>
             </div>
 
-            <div class="settings-section-title" style="margin-top: 24px;">🧰 販売品・アイテム</div>
-            <div class="settings-grid">
-              <div class="setting-item-card">
-                <div class="setting-item-title">ダクトテープ</div>
-                <input type="number" id="price_item_ductTape" class="form-input" required>
+            <!-- 2. 劣化パーツ -->
+            <div class="settings-section-card" style="margin-top: 24px;">
+              <div class="settings-section-header">
+                <div class="settings-section-title">⚙️ 劣化パーツ交換 (チェックボックス型)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="repairs.degradedParts">➕ 項目追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="repairs.degradedParts">🔄 デフォルトに戻す</button>
+                </div>
               </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">洗車キット</div>
-                <input type="number" id="price_item_carWash" class="form-input" required>
+              <div class="settings-items-list" id="list_repairs_degradedParts">
+                <!-- JSで動的レンダリング -->
               </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">ネオンコントローラー</div>
-                <input type="number" id="price_item_neonCtrl" class="form-input" required>
+            </div>
+
+            <!-- 3. 追加サービス -->
+            <div class="settings-section-card" style="margin-top: 24px;">
+              <div class="settings-section-header">
+                <div class="settings-section-title">🚀 NOS ＆ 追加サービス (数量型/チェック型)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="repairs.extraServices">➕ 項目追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="repairs.extraServices">🔄 デフォルトに戻す</button>
+                </div>
               </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">エアサスコントローラー</div>
-                <input type="number" id="price_item_airSusCtrl" class="form-input" required>
+              <div class="settings-items-list" id="list_repairs_extraServices">
+                <!-- JSで動的レンダリング -->
+              </div>
+            </div>
+
+            <!-- 4. 販売品 -->
+            <div class="settings-section-card" style="margin-top: 24px;">
+              <div class="settings-section-header">
+                <div class="settings-section-title">🧰 販売品・アクセサリー (数量型)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="repairItems">➕ 項目追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="repairItems">🔄 デフォルトに戻す</button>
+                </div>
+              </div>
+              <div class="settings-items-list" id="list_repairItems">
+                <!-- JSで動的レンダリング -->
               </div>
             </div>
           </div>
 
           <!-- Tab Pane 2: カスタムパーツ設定 -->
           <div id="tabCustom" class="settings-tab-pane">
-            <div class="settings-section-title">🎨 外装パーツ (1個あたり)</div>
-            <div class="settings-grid">
-              <div class="setting-item-card">
-                <div class="setting-item-title">基本外装パーツ</div>
-                <input type="number" id="price_custom_exterior_base" class="form-input" required>
+            <!-- 1. 性能カスタム -->
+            <div class="settings-section-card">
+              <div class="settings-section-header">
+                <div class="settings-section-title">⚡ 性能カスタム (段階選択型 / チェック型)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="custom.performance">➕ 項目追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="custom.performance">🔄 デフォルトに戻す</button>
+                </div>
               </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">カスタムホイール</div>
-                <input type="number" id="price_custom_exterior_wheels" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">スタンス (車高調整)</div>
-                <input type="number" id="price_custom_exterior_stance" class="form-input" required>
+              <div class="settings-items-list" id="list_custom_performance">
+                <!-- JSで動的レンダリング -->
               </div>
             </div>
 
-            <div class="settings-section-title" style="margin-top: 24px;">🚀 エンジンカスタム</div>
-            <div class="settings-grid">
-              <div class="setting-item-card"><div class="setting-item-title">エンジン Lv1</div><input type="number" id="price_custom_engine_1" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">エンジン Lv2</div><input type="number" id="price_custom_engine_2" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">エンジン Lv3</div><input type="number" id="price_custom_engine_3" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">エンジン Lv4</div><input type="number" id="price_custom_engine_4" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">エンジン Lv5</div><input type="number" id="price_custom_engine_5" class="form-input" required></div>
+            <!-- 2. 外装カスタム -->
+            <div class="settings-section-card" style="margin-top: 24px;">
+              <div class="settings-section-header">
+                <div class="settings-section-title">🎨 外装カスタム (数量型 / チェック型)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="custom.exterior">➕ 項目追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="custom.exterior">🔄 デフォルトに戻す</button>
+                </div>
+              </div>
+              <div class="settings-items-list" id="list_custom_exterior">
+                <!-- JSで動的レンダリング -->
+              </div>
             </div>
 
-            <div class="settings-section-title" style="margin-top: 24px;">🛑 ブレーキカスタム</div>
-            <div class="settings-grid">
-              <div class="setting-item-card"><div class="setting-item-title">ブレーキ Lv1</div><input type="number" id="price_custom_brakes_1" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">ブレーキ Lv2</div><input type="number" id="price_custom_brakes_2" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">ブレーキ Lv3</div><input type="number" id="price_custom_brakes_3" class="form-input" required></div>
+            <!-- 3. NOS / 追加作業 -->
+            <div class="settings-section-card" style="margin-top: 24px;">
+              <div class="settings-section-header">
+                <div class="settings-section-title">🚀 NOS ＆ 追加作業 (数量型)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="custom.repairs">➕ 項目追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="custom.repairs">🔄 デフォルトに戻す</button>
+                </div>
+              </div>
+              <div class="settings-items-list" id="list_custom_repairs">
+                <!-- JSで動的レンダリング -->
+              </div>
             </div>
 
-            <div class="settings-section-title" style="margin-top: 24px;">🏎️ サスペンションカスタム</div>
-            <div class="settings-grid">
-              <div class="setting-item-card"><div class="setting-item-title">サスペンション Lv1</div><input type="number" id="price_custom_suspension_1" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">サスペンション Lv2</div><input type="number" id="price_custom_suspension_2" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">サスペンション Lv3</div><input type="number" id="price_custom_suspension_3" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">サスペンション Lv4</div><input type="number" id="price_custom_suspension_4" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">サスペンション Lv5</div><input type="number" id="price_custom_suspension_5" class="form-input" required></div>
-            </div>
-
-            <div class="settings-section-title" style="margin-top: 24px;">⚙️ トランスミッションカスタム</div>
-            <div class="settings-grid">
-              <div class="setting-item-card"><div class="setting-item-title">ミッション Lv1</div><input type="number" id="price_custom_transmission_1" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">ミッション Lv2</div><input type="number" id="price_custom_transmission_2" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">ミッション Lv3</div><input type="number" id="price_custom_transmission_3" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">ミッション Lv4</div><input type="number" id="price_custom_transmission_4" class="form-input" required></div>
-            </div>
-
-            <div class="settings-section-title" style="margin-top: 24px;">🛡️ 劣化抑制パーツ（各Lv単価）</div>
-            <div class="settings-grid">
-              <div class="setting-item-card"><div class="setting-item-title">抑制パーツ Lv1</div><input type="number" id="price_custom_durability_1" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">抑制パーツ Lv2</div><input type="number" id="price_custom_durability_2" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">抑制パーツ Lv3</div><input type="number" id="price_custom_durability_3" class="form-input" required></div>
-            </div>
-
-            <div class="settings-section-title" style="margin-top: 24px;">⚡ オプションパフォーマンスパーツ</div>
-            <div class="settings-grid">
-              <div class="setting-item-card"><div class="setting-item-title">ターボチャージャー</div><input type="number" id="price_custom_turbo" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">アンチラグシステム</div><input type="number" id="price_custom_antiLag" class="form-input" required></div>
-              <div class="setting-item-card"><div class="setting-item-title">シートベルト・ハーネス</div><input type="number" id="price_custom_harness" class="form-input" required></div>
+            <!-- 4. 販売品 -->
+            <div class="settings-section-card" style="margin-top: 24px;">
+              <div class="settings-section-header">
+                <div class="settings-section-title">📦 販売品・アクセサリー (数量型)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="custom.items">➕ 項目追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="custom.items">🔄 デフォルトに戻す</button>
+                </div>
+              </div>
+              <div class="settings-items-list" id="list_custom_items">
+                <!-- JSで動的レンダリング -->
+              </div>
             </div>
           </div>
 
-          <!-- Tab Pane 3: 素材買取価格 -->
+          <!-- Tab Pane 3: 素材買取設定 -->
           <div id="tabBuyback" class="settings-tab-pane">
-            <div class="settings-section-title">📦 素材買取単価 (1個あたり)</div>
-            <div class="settings-grid">
-              <div class="setting-item-card">
-                <div class="setting-item-title">スチール</div>
-                <input type="number" id="price_buyback_Steel" class="form-input" required>
+            <div class="settings-section-card">
+              <div class="settings-section-header">
+                <div class="settings-section-title">💎 買取素材一覧 (単価設定・素材追加)</div>
+                <div class="settings-section-actions">
+                  <button type="button" class="btn-sub-action btn-add-item" data-section="buyback">➕ 素材を追加</button>
+                  <button type="button" class="btn-sub-action btn-reset-section" data-section="buyback">🔄 デフォルトに戻す</button>
+                </div>
               </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">鉄</div>
-                <input type="number" id="price_buyback_Iron" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">金属スクラップ</div>
-                <input type="number" id="price_buyback_Scrap" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">プラスチック</div>
-                <input type="number" id="price_buyback_Plastic" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">アルミニウム</div>
-                <input type="number" id="price_buyback_Aluminum" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">ゴム</div>
-                <input type="number" id="price_buyback_Rubber" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">ガラス</div>
-                <input type="number" id="price_buyback_Glass" class="form-input" required>
-              </div>
-              <div class="setting-item-card">
-                <div class="setting-item-title">銅</div>
-                <input type="number" id="price_buyback_Copper" class="form-input" required>
+              <div class="settings-items-list" id="list_buyback">
+                <!-- JSで動的レンダリング -->
               </div>
             </div>
           </div>
@@ -301,11 +259,78 @@
         </div>
       </form>
     </main>
+
+    <!-- 項目追加モーダル -->
+    <div id="modalAddItem" class="modal-overlay hidden">
+      <div class="modal-card">
+        <h2 class="modal-title" id="addItemModalTitle">➕ 新しい項目を追加</h2>
+        <p class="modal-desc">追加する計算項目の種類、名称、価格を設定してください。</p>
+        <form id="formAddItem">
+          <input type="hidden" id="addSectionKey">
+          
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;" for="addInputType">入力・計算タイプ</label>
+            <select id="addInputType" class="form-input" style="width: 100%; padding: 10px 12px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+              <option value="stepper">数量入力型（単価 × 数量）</option>
+              <option value="checkbox">チェックボックス型（ON/OFF 固定価格）</option>
+              <option value="dual_mode">店舗 / 出張 2価格型</option>
+              <option value="tiered">段階レベル選択型 (Lv1〜Lv5)</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;" for="addItemName">項目名称 <span style="color: var(--accent-red); font-size: 0.8rem;">(必須)</span></label>
+            <input type="text" id="addItemName" class="form-input" style="width: 100%; padding: 10px 12px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="例: 特注エアロ / チタン" required>
+          </div>
+
+          <!-- 価格入力（タイプによって動的切り替え） -->
+          <div id="addPriceGroupSingle" class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;" for="addItemPrice">単価 (円)</label>
+            <input type="number" id="addItemPrice" class="form-input" style="width: 100%; padding: 10px 12px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="例: 100000" min="0">
+          </div>
+
+          <div id="addPriceGroupDual" class="form-group" style="margin-bottom: 16px; display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div>
+                <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;" for="addItemShopPrice">店内価格 (円)</label>
+                <input type="number" id="addItemShopPrice" class="form-input" style="width: 100%; padding: 10px 12px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="例: 100000" min="0">
+              </div>
+              <div>
+                <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;" for="addItemOnsitePrice">出張価格 (円)</label>
+                <input type="number" id="addItemOnsitePrice" class="form-input" style="width: 100%; padding: 10px 12px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="例: 150000" min="0">
+              </div>
+            </div>
+          </div>
+
+          <div id="addPriceGroupTiered" class="form-group" style="margin-bottom: 16px; display: none;">
+            <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">各レベルの価格 (円)</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;">
+              <div><span style="font-size: 0.8rem; color: var(--text-secondary);">Lv1</span><input type="number" id="addItemTier1" class="form-input" style="width: 100%; padding: 8px 10px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="3000000" min="0"></div>
+              <div><span style="font-size: 0.8rem; color: var(--text-secondary);">Lv2</span><input type="number" id="addItemTier2" class="form-input" style="width: 100%; padding: 8px 10px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="5000000" min="0"></div>
+              <div><span style="font-size: 0.8rem; color: var(--text-secondary);">Lv3</span><input type="number" id="addItemTier3" class="form-input" style="width: 100%; padding: 8px 10px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="10000000" min="0"></div>
+              <div><span style="font-size: 0.8rem; color: var(--text-secondary);">Lv4</span><input type="number" id="addItemTier4" class="form-input" style="width: 100%; padding: 8px 10px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="15000000" min="0"></div>
+              <div><span style="font-size: 0.8rem; color: var(--text-secondary);">Lv5</span><input type="number" id="addItemTier5" class="form-input" style="width: 100%; padding: 8px 10px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="25000000" min="0"></div>
+            </div>
+          </div>
+
+          <div class="form-group" id="addUnitGroup" style="margin-bottom: 20px;">
+            <label class="form-label" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;" for="addItemUnit">単位 (数量型の場合)</label>
+            <input type="text" id="addItemUnit" class="form-input" style="width: 100%; padding: 10px 12px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" placeholder="例: 個, 本, 式" value="個">
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <button type="button" id="btnAddItemCancel" class="btn-secondary" style="padding: 10px 18px;">キャンセル</button>
+            <button type="submit" class="btn-primary" style="padding: 10px 24px;">追加する</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
+  <!-- Toast Notification -->
   <div id="toast" class="toast hidden">
-    <span class="icon">✅</span>
-    <span id="toastMsg">価格設定を更新しました！</span>
+    <span class="toast-icon">✅</span>
+    <span id="toastMsg" class="toast-msg">保存しました！</span>
   </div>
 
   <script src="firebase-config.js"></script>

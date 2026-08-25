@@ -1,6 +1,6 @@
 // Firebase Config & Shop Manager Module
 
-// デフォルト設定価格（標準初期価格）
+// デフォルト設定価格（標準初期価格 - 旧互換スキーマ）
 const DEFAULT_PRICES = {
   repairs: {
     full: { shop: 200000, onsite: 300000 },
@@ -56,6 +56,297 @@ const DEFAULT_PRICES = {
     Copper: 500
   }
 };
+
+// デフォルト動的設定（新動的スキーマ）
+const DEFAULT_CUSTOM_CONFIG = {
+  repairs: {
+    baseRepairs: [
+      { id: 'full', name: 'フル修理 (全損)', type: 'dual_mode', shopPrice: 200000, onsitePrice: 300000, description: '全損・大破時の基本修理' },
+      { id: 'engine', name: 'エンジン修理', type: 'dual_mode', shopPrice: 75000, onsitePrice: 125000, description: 'エンジン単体の修理' },
+      { id: 'body', name: '外装修理', type: 'dual_mode', shopPrice: 75000, onsitePrice: 125000, description: 'ボディ・外装単体の修理' }
+    ],
+    degradedParts: [
+      { id: 'oilPump', name: 'オイルポンプ', type: 'checkbox', price: 10000 },
+      { id: 'battery', name: 'バッテリー', type: 'checkbox', price: 10000 },
+      { id: 'fuelTank', name: '燃料タンク', type: 'checkbox', price: 10000 },
+      { id: 'driveShaft', name: 'ドライブシャフト', type: 'checkbox', price: 10000 },
+      { id: 'cylinder', name: 'シリンダー', type: 'checkbox', price: 10000 }
+    ],
+    extraServices: [
+      { id: 'tires', name: 'タイヤ交換', type: 'stepper', price: 100000, min: 0, max: 4, unit: '本' },
+      { id: 'aircraft', name: '航空機修理加算', type: 'checkbox', price: 100000 },
+      { id: 'nosRefill', name: 'NOS (充填)', type: 'stepper', price: 400000, min: 0, max: 20, unit: '本' },
+      { id: 'nosNew', name: 'NOS (新規取付)', type: 'stepper', price: 500000, min: 0, max: 20, unit: '本' }
+    ]
+  },
+  repairItems: [
+    { id: 'ductTape', name: 'ダクトテープ', type: 'stepper', price: 50000, min: 0, max: 99, unit: '個' },
+    { id: 'carWash', name: '洗車キット', type: 'stepper', price: 50000, min: 0, max: 99, unit: '個' },
+    { id: 'neonCtrl', name: 'ネオンコントローラー', type: 'stepper', price: 200000, min: 0, max: 99, unit: '個' },
+    { id: 'airSusCtrl', name: 'エアサスコントローラー', type: 'stepper', price: 1000000, min: 0, max: 99, unit: '個' }
+  ],
+  custom: {
+    exterior: [
+      { id: 'base', name: '外装カスタムパーツ', type: 'stepper', price: 50000, min: 0, max: 99, unit: '箇所' },
+      { id: 'wheels', name: 'ホイール交換', type: 'checkbox', price: 200000 },
+      { id: 'stance', name: 'スタンスキット', type: 'checkbox', price: 100000 }
+    ],
+    performance: [
+      { id: 'engine', name: 'エンジン', type: 'tiered', prices: [0, 3000000, 5000000, 10000000, 15000000, 25000000], labels: ['なし', 'Lv 1', 'Lv 2', 'Lv 3', 'Lv 4', 'Lv 5'] },
+      { id: 'brakes', name: 'ブレーキ', type: 'tiered', prices: [0, 3000000, 6000000, 8000000], labels: ['なし', 'Lv 1', 'Lv 2', 'Lv 3'] },
+      { id: 'suspension', name: 'サスペンション', type: 'tiered', prices: [0, 3000000, 5000000, 8000000, 10000000, 12000000], labels: ['なし', 'Lv 1', 'Lv 2', 'Lv 3', 'Lv 4', 'Lv 5'] },
+      { id: 'transmission', name: 'トランスミッション', type: 'tiered', prices: [0, 3000000, 5000000, 10000000, 12000000], labels: ['なし', 'Lv 1', 'Lv 2', 'Lv 3', 'Lv 4'] },
+      { id: 'durability', name: '耐久値 (アーマー)', type: 'tiered', prices: [0, 300000, 500000, 700000], labels: ['なし', 'Lv 1', 'Lv 2', 'Lv 3'] },
+      { id: 'turbo', name: 'ターボ', type: 'checkbox', price: 3000000 },
+      { id: 'antiLag', name: 'アンチラグ', type: 'checkbox', price: 5000000 },
+      { id: 'harness', name: 'ハーネス (4点式)', type: 'checkbox', price: 1000000 }
+    ],
+    repairs: [
+      { id: 'nosRefill', name: 'NOS (充填)', type: 'stepper', price: 400000, min: 0, max: 20, unit: '本' },
+      { id: 'nosNew', name: 'NOS (新規取付)', type: 'stepper', price: 500000, min: 0, max: 20, unit: '本' }
+    ],
+    items: [
+      { id: 'ductTape', name: 'ダクトテープ', type: 'stepper', price: 50000, min: 0, max: 99, unit: '個' },
+      { id: 'carWash', name: '洗車キット', type: 'stepper', price: 50000, min: 0, max: 99, unit: '個' },
+      { id: 'neonCtrl', name: 'ネオンコントローラー', type: 'stepper', price: 200000, min: 0, max: 99, unit: '個' },
+      { id: 'airSusCtrl', name: 'エアサスコントローラー', type: 'stepper', price: 1000000, min: 0, max: 99, unit: '個' }
+    ]
+  },
+  buyback: [
+    { id: 'Steel', name: 'Steel (鉄)', type: 'stepper', price: 1500, min: 0, max: 99999, unit: '個' },
+    { id: 'Iron', name: 'Iron (鉱石)', type: 'stepper', price: 1500, min: 0, max: 99999, unit: '個' },
+    { id: 'Scrap', name: 'Scrap (スクラップ)', type: 'stepper', price: 300, min: 0, max: 99999, unit: '個' },
+    { id: 'Plastic', name: 'Plastic (プラスチック)', type: 'stepper', price: 500, min: 0, max: 99999, unit: '個' },
+    { id: 'Aluminum', name: 'Aluminum (アルミ)', type: 'stepper', price: 1000, min: 0, max: 99999, unit: '個' },
+    { id: 'Rubber', name: 'Rubber (ゴム)', type: 'stepper', price: 500, min: 0, max: 99999, unit: '個' },
+    { id: 'Glass', name: 'Glass (ガラス)', type: 'stepper', price: 500, min: 0, max: 99999, unit: '個' },
+    { id: 'Copper', name: 'Copper (銅)', type: 'stepper', price: 500, min: 0, max: 99999, unit: '個' }
+  ]
+};
+
+// スキーマ変換ユーティリティ：旧形式 prices から customConfig を構築
+function buildCustomConfigFromLegacyPrices(legacyPrices) {
+  const config = JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG));
+  if (!legacyPrices) return config;
+
+  // 1. repairs
+  if (legacyPrices.repairs) {
+    const rep = legacyPrices.repairs;
+    if (rep.full) {
+      const item = config.repairs.baseRepairs.find(x => x.id === 'full');
+      if (item) {
+        if (rep.full.shop != null) item.shopPrice = Number(rep.full.shop);
+        if (rep.full.onsite != null) item.onsitePrice = Number(rep.full.onsite);
+      }
+    }
+    if (rep.engine) {
+      const item = config.repairs.baseRepairs.find(x => x.id === 'engine');
+      if (item) {
+        if (rep.engine.shop != null) item.shopPrice = Number(rep.engine.shop);
+        if (rep.engine.onsite != null) item.onsitePrice = Number(rep.engine.onsite);
+      }
+    }
+    if (rep.body) {
+      const item = config.repairs.baseRepairs.find(x => x.id === 'body');
+      if (item) {
+        if (rep.body.shop != null) item.shopPrice = Number(rep.body.shop);
+        if (rep.body.onsite != null) item.onsitePrice = Number(rep.body.onsite);
+      }
+    }
+    if (rep.degradedPartUnit != null) {
+      config.repairs.degradedParts.forEach(part => {
+        part.price = Number(rep.degradedPartUnit);
+      });
+    }
+    if (rep.tires != null) {
+      const item = config.repairs.extraServices.find(x => x.id === 'tires');
+      if (item) item.price = Number(rep.tires);
+    }
+    if (rep.aircraft != null) {
+      const item = config.repairs.extraServices.find(x => x.id === 'aircraft');
+      if (item) item.price = Number(rep.aircraft);
+    }
+    if (rep.nosRefill != null) {
+      const item = config.repairs.extraServices.find(x => x.id === 'nosRefill');
+      if (item) item.price = Number(rep.nosRefill);
+    }
+    if (rep.nosNew != null) {
+      const item = config.repairs.extraServices.find(x => x.id === 'nosNew');
+      if (item) item.price = Number(rep.nosNew);
+    }
+  }
+
+  // 2. repairItems
+  if (legacyPrices.repairItems) {
+    Object.keys(legacyPrices.repairItems).forEach(key => {
+      const item = config.repairItems.find(x => x.id === key);
+      if (item && legacyPrices.repairItems[key] != null) {
+        item.price = Number(legacyPrices.repairItems[key]);
+      }
+    });
+  }
+
+  // 3. custom
+  if (legacyPrices.custom) {
+    const cust = legacyPrices.custom;
+    if (cust.exterior) {
+      Object.keys(cust.exterior).forEach(key => {
+        const item = config.custom.exterior.find(x => x.id === key);
+        if (item && cust.exterior[key] != null) {
+          item.price = Number(cust.exterior[key]);
+        }
+      });
+    }
+    if (cust.performance) {
+      Object.keys(cust.performance).forEach(key => {
+        const item = config.custom.performance.find(x => x.id === key);
+        if (item) {
+          if (Array.isArray(cust.performance[key])) {
+            item.prices = cust.performance[key].map(Number);
+          } else if (cust.performance[key] != null) {
+            item.price = Number(cust.performance[key]);
+          }
+        }
+      });
+    }
+    if (cust.repairs) {
+      Object.keys(cust.repairs).forEach(key => {
+        const item = config.custom.repairs.find(x => x.id === key);
+        if (item && cust.repairs[key] != null) item.price = Number(cust.repairs[key]);
+      });
+    }
+    if (cust.items) {
+      Object.keys(cust.items).forEach(key => {
+        const item = config.custom.items.find(x => x.id === key);
+        if (item && cust.items[key] != null) item.price = Number(cust.items[key]);
+      });
+    }
+  }
+
+  // 4. buyback
+  if (legacyPrices.buyback) {
+    Object.keys(legacyPrices.buyback).forEach(key => {
+      const item = config.buyback.find(x => x.id === key);
+      if (item && legacyPrices.buyback[key] != null) {
+        item.price = Number(legacyPrices.buyback[key]);
+      } else if (!item && legacyPrices.buyback[key] != null) {
+        // 新規キーの場合も追加
+        config.buyback.push({
+          id: key,
+          name: key,
+          type: 'stepper',
+          price: Number(legacyPrices.buyback[key]),
+          min: 0,
+          max: 99999,
+          unit: '個'
+        });
+      }
+    });
+  }
+
+  return config;
+}
+
+// スキーマ変換ユーティリティ：customConfig から旧互換 prices を自動構築
+function buildLegacyPricesFromCustomConfig(customConfig) {
+  const prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+  if (!customConfig) return prices;
+
+  // 1. repairs
+  if (customConfig.repairs) {
+    if (Array.isArray(customConfig.repairs.baseRepairs)) {
+      const full = customConfig.repairs.baseRepairs.find(x => x.id === 'full');
+      if (full) {
+        prices.repairs.full = { shop: Number(full.shopPrice || 0), onsite: Number(full.onsitePrice || 0) };
+      }
+      const engine = customConfig.repairs.baseRepairs.find(x => x.id === 'engine');
+      if (engine) {
+        prices.repairs.engine = { shop: Number(engine.shopPrice || 0), onsite: Number(engine.onsitePrice || 0) };
+      }
+      const body = customConfig.repairs.baseRepairs.find(x => x.id === 'body');
+      if (body) {
+        prices.repairs.body = { shop: Number(body.shopPrice || 0), onsite: Number(body.onsitePrice || 0) };
+      }
+    }
+    if (Array.isArray(customConfig.repairs.degradedParts) && customConfig.repairs.degradedParts.length > 0) {
+      prices.repairs.degradedPartUnit = Number(customConfig.repairs.degradedParts[0].price || 0);
+    }
+    if (Array.isArray(customConfig.repairs.extraServices)) {
+      const tires = customConfig.repairs.extraServices.find(x => x.id === 'tires');
+      if (tires) prices.repairs.tires = Number(tires.price || 0);
+      const aircraft = customConfig.repairs.extraServices.find(x => x.id === 'aircraft');
+      if (aircraft) prices.repairs.aircraft = Number(aircraft.price || 0);
+      const nosRefill = customConfig.repairs.extraServices.find(x => x.id === 'nosRefill');
+      if (nosRefill) prices.repairs.nosRefill = Number(nosRefill.price || 0);
+      const nosNew = customConfig.repairs.extraServices.find(x => x.id === 'nosNew');
+      if (nosNew) prices.repairs.nosNew = Number(nosNew.price || 0);
+    }
+  }
+
+  // 2. repairItems
+  if (Array.isArray(customConfig.repairItems)) {
+    customConfig.repairItems.forEach(item => {
+      prices.repairItems[item.id] = Number(item.price || 0);
+    });
+  }
+
+  // 3. custom
+  if (customConfig.custom) {
+    if (Array.isArray(customConfig.custom.exterior)) {
+      customConfig.custom.exterior.forEach(item => {
+        prices.custom.exterior[item.id] = Number(item.price || 0);
+      });
+    }
+    if (Array.isArray(customConfig.custom.performance)) {
+      customConfig.custom.performance.forEach(item => {
+        if (item.type === 'tiered') {
+          prices.custom.performance[item.id] = Array.isArray(item.prices) ? item.prices.map(Number) : [];
+        } else {
+          prices.custom.performance[item.id] = Number(item.price || 0);
+        }
+      });
+    }
+    if (Array.isArray(customConfig.custom.repairs)) {
+      customConfig.custom.repairs.forEach(item => {
+        prices.custom.repairs[item.id] = Number(item.price || 0);
+      });
+    }
+    if (Array.isArray(customConfig.custom.items)) {
+      customConfig.custom.items.forEach(item => {
+        prices.custom.items[item.id] = Number(item.price || 0);
+      });
+    }
+  }
+
+  // 4. buyback
+  if (Array.isArray(customConfig.buyback)) {
+    customConfig.buyback.forEach(item => {
+      prices.buyback[item.id] = Number(item.price || 0);
+    });
+  }
+
+  return prices;
+}
+
+// 店舗設定オブジェクトの正規化
+function normalizeShopConfig(docData) {
+  let prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+  let customConfig = JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG));
+
+  if (!docData) {
+    return { prices, customConfig };
+  }
+
+  if (docData.customConfig) {
+    customConfig = mergeDeep(customConfig, docData.customConfig);
+    prices = buildLegacyPricesFromCustomConfig(customConfig);
+  } else if (docData.prices) {
+    prices = mergeDeep(prices, docData.prices);
+    customConfig = buildCustomConfigFromLegacyPrices(prices);
+  }
+
+  return { prices, customConfig };
+}
 
 // 1. Firebase Config
 const firebaseConfig = {
@@ -154,6 +445,9 @@ function subscribeShopPrices(shopId, callback) {
   if (!firebaseInitialized || !db) {
     const localData = localStorage.getItem(`shop_prices_${cleanId}`);
     let prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+    let customConfig = JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG));
+    let shopName = cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase();
+
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
@@ -162,18 +456,24 @@ function subscribeShopPrices(shopId, callback) {
           const now = Date.now();
           if (!isNaN(lastUpdated) && (now - lastUpdated > SAMPLE_RESET_INTERVAL_MS)) {
             // 1時間経過しているため初期設定にリセット
-            prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
             localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({
               id: cleanId,
               name: 'サンプル店舗',
               prices: DEFAULT_PRICES,
+              customConfig: DEFAULT_CUSTOM_CONFIG,
               updatedAt: new Date().toISOString()
             }));
           } else {
-            prices = mergeDeep(prices, parsed.prices || {});
+            const normalized = normalizeShopConfig(parsed);
+            prices = normalized.prices;
+            customConfig = normalized.customConfig;
+            if (parsed.name) shopName = parsed.name;
           }
         } else {
-          prices = mergeDeep(prices, parsed.prices || {});
+          const normalized = normalizeShopConfig(parsed);
+          prices = normalized.prices;
+          customConfig = normalized.customConfig;
+          if (parsed.name) shopName = parsed.name;
         }
       } catch (e) {
         console.error("Local data parse error", e);
@@ -181,8 +481,9 @@ function subscribeShopPrices(shopId, callback) {
     }
     const shopInfo = {
       id: cleanId,
-      name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
-      prices
+      name: shopName,
+      prices,
+      customConfig
     };
     callback(shopInfo);
     return () => {};
@@ -193,7 +494,8 @@ function subscribeShopPrices(shopId, callback) {
     let shopInfo = {
       id: cleanId,
       name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
-      prices: JSON.parse(JSON.stringify(DEFAULT_PRICES))
+      prices: JSON.parse(JSON.stringify(DEFAULT_PRICES)),
+      customConfig: JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG))
     };
 
     if (doc.exists) {
@@ -210,21 +512,23 @@ function subscribeShopPrices(shopId, callback) {
             await db.collection('shops').doc(cleanId).update({
               passcodeHash: sampleHashedPasscode,
               prices: DEFAULT_PRICES,
+              customConfig: DEFAULT_CUSTOM_CONFIG,
               updatedAt: new Date().toISOString()
             });
           } catch (e) {
             console.warn("Sample shop reset error", e);
           }
           shopInfo.prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
+          shopInfo.customConfig = JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG));
           localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify(shopInfo));
           callback(shopInfo);
           return;
         }
       }
 
-      if (data.prices) {
-        shopInfo.prices = mergeDeep(shopInfo.prices, data.prices);
-      }
+      const normalized = normalizeShopConfig(data);
+      shopInfo.prices = normalized.prices;
+      shopInfo.customConfig = normalized.customConfig;
     }
     
     // キャッシュ保存
@@ -235,7 +539,8 @@ function subscribeShopPrices(shopId, callback) {
     callback({
       id: cleanId,
       name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
-      prices: JSON.parse(JSON.stringify(DEFAULT_PRICES))
+      prices: JSON.parse(JSON.stringify(DEFAULT_PRICES)),
+      customConfig: JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG))
     });
   });
 
@@ -267,6 +572,7 @@ async function createShop(shopId, shopName, passcode) {
     id: cleanId,
     name: cleanName,
     prices: DEFAULT_PRICES,
+    customConfig: DEFAULT_CUSTOM_CONFIG,
     createdAt: new Date().toISOString()
   };
 
@@ -288,15 +594,15 @@ async function createShop(shopId, shopName, passcode) {
       throw new Error("指定された店舗IDは既に登録されています。");
     }
     localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify({ ...publicData, passcodeHash: hashed }));
-    localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({ id: cleanId, name: cleanName, prices: DEFAULT_PRICES }));
+    localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({ id: cleanId, name: cleanName, prices: DEFAULT_PRICES, customConfig: DEFAULT_CUSTOM_CONFIG }));
   }
 
   setShopId(cleanId);
   return cleanId;
 }
 
-// 5. 価格設定の更新
-async function updateShopPrices(shopId, passcode, newPrices) {
+// 5. 価格設定の更新（非破壊デュアルモード保存）
+async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
   initFirebase();
   const cleanId = (shopId || '').toLowerCase().trim();
 
@@ -309,6 +615,19 @@ async function updateShopPrices(shopId, passcode, newPrices) {
 
   const hashedInput = await hashPasscode(passcode);
 
+  // newCustomConfig と newPrices の整合性を自動調整
+  let finalCustomConfig = newCustomConfig;
+  let finalPrices = newPrices;
+
+  if (finalCustomConfig && !finalPrices) {
+    finalPrices = buildLegacyPricesFromCustomConfig(finalCustomConfig);
+  } else if (finalPrices && !finalCustomConfig) {
+    finalCustomConfig = buildCustomConfigFromLegacyPrices(finalPrices);
+  } else if (!finalCustomConfig && !finalPrices) {
+    finalCustomConfig = DEFAULT_CUSTOM_CONFIG;
+    finalPrices = DEFAULT_PRICES;
+  }
+
   if (firebaseInitialized && db) {
     const docRef = db.collection('shops').doc(cleanId);
     const doc = await docRef.get();
@@ -320,7 +639,8 @@ async function updateShopPrices(shopId, passcode, newPrices) {
         id: cleanId,
         name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
         passcodeHash: cleanId === SAMPLE_SHOP_ID ? sampleHash : hashedInput,
-        prices: newPrices,
+        prices: finalPrices,
+        customConfig: finalCustomConfig,
         updatedAt: new Date().toISOString()
       });
       batch.set(docRef.collection('auth').doc('secret'), {
@@ -339,7 +659,8 @@ async function updateShopPrices(shopId, passcode, newPrices) {
     const updatePayload = {
       id: cleanId,
       passcodeHash: hashedInput, // Firestoreルール照合用
-      prices: newPrices,
+      prices: finalPrices,
+      customConfig: finalCustomConfig,
       updatedAt: new Date().toISOString()
     };
 
@@ -365,7 +686,8 @@ async function updateShopPrices(shopId, passcode, newPrices) {
     localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({
       id: cleanId,
       name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId,
-      prices: newPrices,
+      prices: finalPrices,
+      customConfig: finalCustomConfig,
       updatedAt: new Date().toISOString()
     }));
     return true;
@@ -544,6 +866,10 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
 // グローバル公開
 window.ShopManager = {
   DEFAULT_PRICES,
+  DEFAULT_CUSTOM_CONFIG,
+  buildCustomConfigFromLegacyPrices,
+  buildLegacyPricesFromCustomConfig,
+  normalizeShopConfig,
   hashPasscode,
   getShopId,
   setShopId,

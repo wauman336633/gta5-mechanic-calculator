@@ -4,382 +4,450 @@ document.addEventListener('DOMContentLoaded', () => {
   const state = {
     mode: 'shop', // 'shop' | 'onsite'
     aircraft: false,
-    repairs: {
-      full: false,
-      engine: false,
-      body: false,
-      degradedParts: {
-        oilPump: false,
-        battery: false,
-        fuelTank: false,
-        driveShaft: false,
-        cylinder: false
-      },
-      tiresCount: 0,
-      nosRefillCount: 0,
-      nosNewCount: 0
-    },
-    items: {
-      ductTape: 0,
-      carWash: 0,
-      neonCtrl: 0,
-      airSusCtrl: 0
-    }
+    repairs: {}, // id -> boolean or number
+    items: {}    // id -> number
   };
 
-  // Prices Table (Dynamic Shop Prices)
-  let PRICES = {
-    repairs: {
-      full: { shop: 200000, onsite: 300000 },
-      engine: { shop: 75000, onsite: 125000 },
-      body: { shop: 75000, onsite: 125000 },
-      degradedPartUnit: 10000,
-      tires: 100000,
-      aircraft: 100000,
-      nosRefill: 400000,
-      nosNew: 500000
-    },
-    items: {
-      ductTape: 50000,
-      carWash: 50000,
-      neonCtrl: 200000,
-      airSusCtrl: 1000000
-    }
-  };
-
-  // マルチ店舗データの接続・購読
-  const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'sample';
-  const currentShopNameEl = document.getElementById('currentShopName');
-
-  if (window.ShopManager) {
-    window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
-      if (currentShopNameEl) currentShopNameEl.textContent = shopInfo.name;
-      if (shopInfo.prices) {
-        if (shopInfo.prices.repairs) PRICES.repairs = shopInfo.prices.repairs;
-        if (shopInfo.prices.repairItems) PRICES.items = shopInfo.prices.repairItems;
-        updateDynamicPriceLabels();
-        calculateTotal();
-      }
-    });
-  }
+  let currentConfig = JSON.parse(JSON.stringify(window.ShopManager ? window.ShopManager.DEFAULT_CUSTOM_CONFIG : {}));
 
   // DOM Elements
   const btnModeShop = document.getElementById('btnModeShop');
   const btnModeOnsite = document.getElementById('btnModeOnsite');
   const chkAircraft = document.getElementById('chkAircraft');
+  const priceAircraft = document.getElementById('priceAircraft');
   const btnResetRepair = document.getElementById('btnResetRepair');
   const modeTag = document.getElementById('modeTag');
+  const currentShopNameEl = document.getElementById('currentShopName');
 
-  const chkFullRepair = document.getElementById('chkFullRepair');
-  const chkEngineRepair = document.getElementById('chkEngineRepair');
-  const chkBodyRepair = document.getElementById('chkBodyRepair');
-  const priceFullRepair = document.getElementById('priceFullRepair');
-  const priceEngineRepair = document.getElementById('priceEngineRepair');
-  const priceBodyRepair = document.getElementById('priceBodyRepair');
-  const priceAircraft = document.getElementById('priceAircraft');
-  const priceNosRefill = document.getElementById('priceNosRefill');
-  const priceNosNew = document.getElementById('priceNosNew');
-  const priceDuctTape = document.getElementById('priceDuctTape');
-  const priceCarWash = document.getElementById('priceCarWash');
-  const priceNeonCtrl = document.getElementById('priceNeonCtrl');
-  const priceAirSusCtrl = document.getElementById('priceAirSusCtrl');
-
-  const chkOilPump = document.getElementById('chkOilPump');
-  const chkBattery = document.getElementById('chkBattery');
-  const chkFuelTank = document.getElementById('chkFuelTank');
-  const chkDriveShaft = document.getElementById('chkDriveShaft');
-  const chkCylinder = document.getElementById('chkCylinder');
-
-  const groupTires = document.getElementById('groupTires');
-  const priceTiresDisplay = document.getElementById('priceTiresDisplay');
-
-  const cntNosRefill = document.getElementById('cntNosRefill');
-  const cntNosNew = document.getElementById('cntNosNew');
-
-  const cntDuctTape = document.getElementById('cntDuctTape');
-  const cntCarWash = document.getElementById('cntCarWash');
-  const cntNeonCtrl = document.getElementById('cntNeonCtrl');
-  const cntAirSusCtrl = document.getElementById('cntAirSusCtrl');
+  const repairBaseContainer = document.getElementById('repairBaseContainer');
+  const repairExtraContainer = document.getElementById('repairExtraContainer');
+  const repairItemsContainer = document.getElementById('repairItemsContainer');
 
   const repairTotalDisplay = document.getElementById('repairTotalDisplay');
   const btnCopyRepairTotal = document.getElementById('btnCopyRepairTotal');
   const btnCopyRepairSummary = document.getElementById('btnCopyRepairSummary');
 
-  const toast = document.getElementById('toast');
-  const toastMsg = document.getElementById('toastMsg');
-
   // Helper Format Currency
   function formatJPY(num) {
-    return window.AppCommon ? window.AppCommon.formatJPY(num) : ('¥' + Math.floor(num).toLocaleString('ja-JP'));
+    return window.AppCommon ? window.AppCommon.formatJPY(num) : ('¥' + Math.floor(num || 0).toLocaleString('ja-JP'));
   }
 
-  // Update DOM price labels dynamically
-  function updateDynamicPriceLabels() {
-    const mode = state.mode;
-    if (priceFullRepair) priceFullRepair.textContent = formatJPY(PRICES.repairs.full[mode]);
-    if (priceEngineRepair) priceEngineRepair.textContent = formatJPY(PRICES.repairs.engine[mode]);
-    if (priceBodyRepair) priceBodyRepair.textContent = formatJPY(PRICES.repairs.body[mode]);
-    if (priceAircraft) priceAircraft.textContent = `(+${formatJPY(PRICES.repairs.aircraft)})`;
+  // マルチ店舗データの接続・購読
+  const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'sample';
 
-    document.querySelectorAll('.price-degraded-part').forEach(el => {
-      el.textContent = formatJPY(PRICES.repairs.degradedPartUnit);
+  if (window.ShopManager) {
+    window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
+      if (currentShopNameEl) currentShopNameEl.textContent = shopInfo.name;
+      if (shopInfo.customConfig) {
+        currentConfig = shopInfo.customConfig;
+      }
+      renderRepairUI();
+      calculateTotal();
     });
+  }
 
-    if (priceNosRefill) priceNosRefill.textContent = formatJPY(PRICES.repairs.nosRefill);
-    if (priceNosNew) priceNosNew.textContent = formatJPY(PRICES.repairs.nosNew);
+  // UI動的レンダリング
+  function renderRepairUI() {
+    renderBaseRepairs();
+    renderExtraServices();
+    renderRepairItems();
+    updateModeTag();
+  }
 
-    if (priceDuctTape) priceDuctTape.textContent = formatJPY(PRICES.items.ductTape);
-    if (priceCarWash) priceCarWash.textContent = formatJPY(PRICES.items.carWash);
-    if (priceNeonCtrl) priceNeonCtrl.textContent = formatJPY(PRICES.items.neonCtrl);
-    if (priceAirSusCtrl) priceAirSusCtrl.textContent = formatJPY(PRICES.items.airSusCtrl);
+  // 1. 基本修理 ＆ 劣化パーツのレンダリング
+  function renderBaseRepairs() {
+    if (!repairBaseContainer) return;
+    repairBaseContainer.innerHTML = '';
 
-    if (state.repairs.tiresCount > 0 && priceTiresDisplay) {
-      priceTiresDisplay.textContent = formatJPY(state.repairs.tiresCount * PRICES.repairs.tires);
+    const baseRepairs = currentConfig.repairs?.baseRepairs || [];
+    const degradedParts = currentConfig.repairs?.degradedParts || [];
+
+    // 基本修理（店舗 / 出張 2価格型）
+    if (baseRepairs.length > 0) {
+      baseRepairs.forEach(item => {
+        const checked = !!state.repairs[item.id];
+        const price = state.mode === 'onsite' ? Number(item.onsitePrice || 0) : Number(item.shopPrice || 0);
+
+        const row = document.createElement('div');
+        row.className = 'item-row toggle-item';
+        row.innerHTML = `
+          <label class="toggle-card" for="chk_${item.id}">
+            <input type="checkbox" id="chk_${item.id}" ${checked ? 'checked' : ''}>
+            <div class="toggle-content">
+              <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+              <span class="item-price" id="price_${item.id}">${formatJPY(price)}</span>
+            </div>
+          </label>
+        `;
+        repairBaseContainer.appendChild(row);
+
+        const chk = row.querySelector(`#chk_${item.id}`);
+        chk.addEventListener('change', (e) => {
+          state.repairs[item.id] = e.target.checked;
+          // フル修理と部位別修理（engine, body）の排他制御
+          if (item.id === 'full' && e.target.checked) {
+            ['engine', 'body'].forEach(subId => {
+              state.repairs[subId] = false;
+              const subChk = document.getElementById(`chk_${subId}`);
+              if (subChk) subChk.checked = false;
+            });
+          } else if ((item.id === 'engine' || item.id === 'body') && e.target.checked) {
+            state.repairs['full'] = false;
+            const fullChk = document.getElementById('chk_full');
+            if (fullChk) fullChk.checked = false;
+          }
+          calculateTotal();
+        });
+      });
     }
+
+    // 劣化パーツ交換
+    if (degradedParts.length > 0) {
+      const divider = document.createElement('div');
+      divider.className = 'row-divider';
+      divider.textContent = '劣化パーツ交換';
+      repairBaseContainer.appendChild(divider);
+
+      degradedParts.forEach(part => {
+        const checked = !!state.repairs[part.id];
+        const row = document.createElement('div');
+        row.className = 'item-row toggle-item';
+        row.innerHTML = `
+          <label class="toggle-card" for="chk_${part.id}">
+            <input type="checkbox" id="chk_${part.id}" ${checked ? 'checked' : ''}>
+            <div class="toggle-content">
+              <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(part.name) : part.name}</span>
+              <span class="item-price price-degraded-part">${formatJPY(part.price)}</span>
+            </div>
+          </label>
+        `;
+        repairBaseContainer.appendChild(row);
+
+        const chk = row.querySelector(`#chk_${part.id}`);
+        chk.addEventListener('change', (e) => {
+          state.repairs[part.id] = e.target.checked;
+          calculateTotal();
+        });
+      });
+    }
+  }
+
+  // 2. 追加サービス（NOS・タイヤ等）のレンダリング
+  function renderExtraServices() {
+    if (!repairExtraContainer) return;
+    repairExtraContainer.innerHTML = '';
+
+    const extraServices = currentConfig.repairs?.extraServices || [];
+    if (extraServices.length === 0) {
+      repairExtraContainer.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.85rem; padding: 12px;">追加サービス項目がありません。</p>';
+      return;
+    }
+
+    extraServices.forEach(item => {
+      if (item.id === 'aircraft') {
+        // 航空機は上部コントロールバーのchkAircraftに価格を同期
+        if (priceAircraft) {
+          priceAircraft.textContent = `(+${formatJPY(item.price)})`;
+        }
+        return;
+      }
+
+      if (item.type === 'stepper') {
+        const qty = state.repairs[item.id] || 0;
+        const row = document.createElement('div');
+        row.className = 'item-row counter-item';
+        row.innerHTML = `
+          <div class="counter-info">
+            <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+            <span class="item-unit-price">${formatJPY(item.price)}</span>
+          </div>
+          <div class="counter-controls">
+            <button class="cnt-btn dec" data-target="cnt_rep_${item.id}">-</button>
+            <input type="number" id="cnt_rep_${item.id}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
+            <button class="cnt-btn inc" data-target="cnt_rep_${item.id}">+</button>
+          </div>
+        `;
+        repairExtraContainer.appendChild(row);
+
+        const input = row.querySelector(`#cnt_rep_${item.id}`);
+        input.addEventListener('focus', () => input.select());
+        input.addEventListener('input', () => {
+          let v = parseInt(input.value, 10);
+          const min = item.min != null ? item.min : 0;
+          const max = item.max != null ? item.max : 99;
+          if (isNaN(v) || v < min) v = min;
+          if (v > max) v = max;
+          state.repairs[item.id] = v;
+          calculateTotal();
+        });
+
+        row.querySelectorAll('.cnt-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const isInc = btn.classList.contains('inc');
+            let v = parseInt(input.value, 10) || 0;
+            const min = item.min != null ? item.min : 0;
+            const max = item.max != null ? item.max : 99;
+            if (isInc && v < max) v++;
+            if (!isInc && v > min) v--;
+            input.value = v;
+            state.repairs[item.id] = v;
+            calculateTotal();
+          });
+        });
+      } else if (item.type === 'checkbox') {
+        const checked = !!state.repairs[item.id];
+        const row = document.createElement('div');
+        row.className = 'item-row toggle-item';
+        row.innerHTML = `
+          <label class="toggle-card" for="chk_rep_${item.id}">
+            <input type="checkbox" id="chk_rep_${item.id}" ${checked ? 'checked' : ''}>
+            <div class="toggle-content">
+              <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+              <span class="item-price">${formatJPY(item.price)}</span>
+            </div>
+          </label>
+        `;
+        repairExtraContainer.appendChild(row);
+
+        const chk = row.querySelector(`#chk_rep_${item.id}`);
+        chk.addEventListener('change', (e) => {
+          state.repairs[item.id] = e.target.checked;
+          calculateTotal();
+        });
+      }
+    });
+  }
+
+  // 3. 販売品・アクセサリーのレンダリング
+  function renderRepairItems() {
+    if (!repairItemsContainer) return;
+    repairItemsContainer.innerHTML = '';
+
+    const items = currentConfig.repairItems || [];
+    if (items.length === 0) {
+      repairItemsContainer.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.85rem; padding: 12px;">販売品アイテムがありません。</p>';
+      return;
+    }
+
+    items.forEach(item => {
+      const qty = state.items[item.id] || 0;
+      const row = document.createElement('div');
+      row.className = 'item-row counter-item';
+      row.innerHTML = `
+        <div class="counter-info">
+          <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+          <span class="item-unit-price">${formatJPY(item.price)}</span>
+        </div>
+        <div class="counter-controls">
+          <button class="cnt-btn dec" data-target="cnt_item_${item.id}">-</button>
+          <input type="number" id="cnt_item_${item.id}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
+          <button class="cnt-btn inc" data-target="cnt_item_${item.id}">+</button>
+        </div>
+      `;
+      repairItemsContainer.appendChild(row);
+
+      const input = row.querySelector(`#cnt_item_${item.id}`);
+      input.addEventListener('focus', () => input.select());
+      input.addEventListener('input', () => {
+        let v = parseInt(input.value, 10);
+        const min = item.min != null ? item.min : 0;
+        const max = item.max != null ? item.max : 99;
+        if (isNaN(v) || v < min) v = min;
+        if (v > max) v = max;
+        state.items[item.id] = v;
+        calculateTotal();
+      });
+
+      row.querySelectorAll('.cnt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const isInc = btn.classList.contains('inc');
+          let v = parseInt(input.value, 10) || 0;
+          const min = item.min != null ? item.min : 0;
+          const max = item.max != null ? item.max : 99;
+          if (isInc && v < max) v++;
+          if (!isInc && v > min) v--;
+          input.value = v;
+          state.items[item.id] = v;
+          calculateTotal();
+        });
+      });
+    });
+  }
+
+  // モード表示の更新
+  function updateModeTag() {
+    const isShop = state.mode === 'shop';
+    if (btnModeShop) btnModeShop.classList.toggle('active', isShop);
+    if (btnModeOnsite) btnModeOnsite.classList.toggle('active', !isShop);
+    if (modeTag) modeTag.textContent = isShop ? '店内料金適用中' : '出張料金適用中';
+
+    // 基本修理の表示価格を更新
+    const baseRepairs = currentConfig.repairs?.baseRepairs || [];
+    baseRepairs.forEach(item => {
+      const priceEl = document.getElementById(`price_${item.id}`);
+      if (priceEl) {
+        const price = isShop ? Number(item.shopPrice || 0) : Number(item.onsitePrice || 0);
+        priceEl.textContent = formatJPY(price);
+      }
+    });
   }
 
   // Calculate Total Amount
   function calculateTotal() {
     let total = 0;
-    const mode = state.mode;
+    const isShop = state.mode === 'shop';
 
-    if (state.repairs.full) total += PRICES.repairs.full[mode];
-    if (state.repairs.engine) total += PRICES.repairs.engine[mode];
-    if (state.repairs.body) total += PRICES.repairs.body[mode];
+    // 1. 基本修理
+    const baseRepairs = currentConfig.repairs?.baseRepairs || [];
+    baseRepairs.forEach(item => {
+      if (state.repairs[item.id]) {
+        total += isShop ? Number(item.shopPrice || 0) : Number(item.onsitePrice || 0);
+      }
+    });
 
-    if (state.repairs.degradedParts.oilPump) total += PRICES.repairs.degradedPartUnit;
-    if (state.repairs.degradedParts.battery) total += PRICES.repairs.degradedPartUnit;
-    if (state.repairs.degradedParts.fuelTank) total += PRICES.repairs.degradedPartUnit;
-    if (state.repairs.degradedParts.driveShaft) total += PRICES.repairs.degradedPartUnit;
-    if (state.repairs.degradedParts.cylinder) total += PRICES.repairs.degradedPartUnit;
+    // 2. 劣化パーツ
+    const degradedParts = currentConfig.repairs?.degradedParts || [];
+    degradedParts.forEach(part => {
+      if (state.repairs[part.id]) {
+        total += Number(part.price || 0);
+      }
+    });
 
-    total += state.repairs.tiresCount * PRICES.repairs.tires;
-    if (state.aircraft) total += PRICES.repairs.aircraft;
-    total += state.repairs.nosRefillCount * PRICES.repairs.nosRefill;
-    total += state.repairs.nosNewCount * PRICES.repairs.nosNew;
+    // 3. 追加サービス (NOS, タイヤ等)
+    const extraServices = currentConfig.repairs?.extraServices || [];
+    extraServices.forEach(item => {
+      if (item.id === 'aircraft') {
+        if (state.aircraft) total += Number(item.price || 0);
+      } else if (item.type === 'stepper') {
+        const qty = Number(state.repairs[item.id] || 0);
+        total += qty * Number(item.price || 0);
+      } else if (item.type === 'checkbox') {
+        if (state.repairs[item.id]) total += Number(item.price || 0);
+      }
+    });
 
-    // Items
-    total += state.items.ductTape * PRICES.items.ductTape;
-    total += state.items.carWash * PRICES.items.carWash;
-    total += state.items.neonCtrl * PRICES.items.neonCtrl;
-    total += state.items.airSusCtrl * PRICES.items.airSusCtrl;
+    // 4. 販売品
+    const repairItems = currentConfig.repairItems || [];
+    repairItems.forEach(item => {
+      const qty = Number(state.items[item.id] || 0);
+      total += qty * Number(item.price || 0);
+    });
 
-    repairTotalDisplay.textContent = formatJPY(total);
+    if (repairTotalDisplay) {
+      repairTotalDisplay.textContent = formatJPY(total);
+    }
     return total;
   }
 
-  // Generate Repair Summary
+  // Generate Repair Summary for Clipboard Copy
   function getSummaryText() {
     const items = [];
-    if (state.repairs.full) items.push('全修理');
-    if (state.repairs.engine) items.push('エンジン修理');
-    if (state.repairs.body) items.push('ボディ修理');
+    const isShop = state.mode === 'shop';
 
-    if (state.repairs.degradedParts.oilPump) items.push('オイルポンプ');
-    if (state.repairs.degradedParts.battery) items.push('バッテリー');
-    if (state.repairs.degradedParts.fuelTank) items.push('燃料タンク');
-    if (state.repairs.degradedParts.driveShaft) items.push('ドライブシャフト');
-    if (state.repairs.degradedParts.cylinder) items.push('シリンダー');
+    // 基本修理
+    const baseRepairs = currentConfig.repairs?.baseRepairs || [];
+    baseRepairs.forEach(item => {
+      if (state.repairs[item.id]) {
+        items.push(item.name);
+      }
+    });
 
-    if (state.repairs.tiresCount > 0) items.push(`タイヤx${state.repairs.tiresCount}`);
-    if (state.aircraft) items.push('航空機/船');
-    if (state.repairs.nosRefillCount > 0) items.push(`NOS補充x${state.repairs.nosRefillCount}`);
-    if (state.repairs.nosNewCount > 0) items.push(`NOS新規x${state.repairs.nosNewCount}`);
+    // 劣化パーツ
+    const degradedParts = currentConfig.repairs?.degradedParts || [];
+    degradedParts.forEach(part => {
+      if (state.repairs[part.id]) {
+        items.push(part.name);
+      }
+    });
 
-    if (state.items.ductTape > 0) items.push(`ダクトテープx${state.items.ductTape}`);
-    if (state.items.carWash > 0) items.push(`洗車キットx${state.items.carWash}`);
-    if (state.items.neonCtrl > 0) items.push(`ネオンCtrlx${state.items.neonCtrl}`);
-    if (state.items.airSusCtrl > 0) items.push(`エアサスCtrlx${state.items.airSusCtrl}`);
+    // 航空機
+    if (state.aircraft) {
+      items.push('航空機/船加算');
+    }
+
+    // 追加サービス
+    const extraServices = currentConfig.repairs?.extraServices || [];
+    extraServices.forEach(item => {
+      if (item.id !== 'aircraft') {
+        if (item.type === 'stepper') {
+          const qty = Number(state.repairs[item.id] || 0);
+          if (qty > 0) items.push(`${item.name}x${qty}`);
+        } else if (item.type === 'checkbox' && state.repairs[item.id]) {
+          items.push(item.name);
+        }
+      }
+    });
+
+    // 販売品
+    const repairItems = currentConfig.repairItems || [];
+    repairItems.forEach(item => {
+      const qty = Number(state.items[item.id] || 0);
+      if (qty > 0) items.push(`${item.name}x${qty}`);
+    });
 
     const total = calculateTotal();
     return items.length > 0 ? `${total} ${items.join(', ')}` : '作業なし';
   }
 
-  // Toast Function
-  function showToast(message) {
-    if (window.AppCommon) window.AppCommon.showToast(message);
+  // Mode Switch Events
+  if (btnModeShop) {
+    btnModeShop.addEventListener('click', () => {
+      state.mode = 'shop';
+      updateModeTag();
+      calculateTotal();
+    });
   }
 
-  // Clipboard Helper
-  function copyToClipboard(text, successMsg) {
-    if (window.AppCommon) {
-      window.AppCommon.copyToClipboard(text, successMsg);
-    }
+  if (btnModeOnsite) {
+    btnModeOnsite.addEventListener('click', () => {
+      state.mode = 'onsite';
+      updateModeTag();
+      calculateTotal();
+    });
   }
 
-
-
-  // Mode Update
-  function updateModeUI() {
-    const isShop = state.mode === 'shop';
-    btnModeShop.classList.toggle('active', isShop);
-    btnModeOnsite.classList.toggle('active', !isShop);
-    modeTag.textContent = isShop ? '店内料金適用中' : '出張料金適用中';
-
-    updateDynamicPriceLabels();
-    calculateTotal();
+  if (chkAircraft) {
+    chkAircraft.addEventListener('change', (e) => {
+      state.aircraft = e.target.checked;
+      calculateTotal();
+    });
   }
 
-  btnModeShop.addEventListener('click', () => { state.mode = 'shop'; updateModeUI(); });
-  btnModeOnsite.addEventListener('click', () => { state.mode = 'onsite'; updateModeUI(); });
-
-  chkAircraft.addEventListener('change', (e) => {
-    state.aircraft = e.target.checked;
-    calculateTotal();
-  });
-
-  chkFullRepair.addEventListener('change', (e) => {
-    state.repairs.full = e.target.checked;
-    if (e.target.checked) {
-      chkEngineRepair.checked = false;
-      chkBodyRepair.checked = false;
-      state.repairs.engine = false;
-      state.repairs.body = false;
-    }
-    calculateTotal();
-  });
-
-  chkEngineRepair.addEventListener('change', (e) => {
-    state.repairs.engine = e.target.checked;
-    if (e.target.checked && chkFullRepair.checked) {
-      chkFullRepair.checked = false;
-      state.repairs.full = false;
-    }
-    calculateTotal();
-  });
-
-  chkBodyRepair.addEventListener('change', (e) => {
-    state.repairs.body = e.target.checked;
-    if (e.target.checked && chkFullRepair.checked) {
-      chkFullRepair.checked = false;
-      state.repairs.full = false;
-    }
-    calculateTotal();
-  });
-
-  chkOilPump.addEventListener('change', (e) => { state.repairs.degradedParts.oilPump = e.target.checked; calculateTotal(); });
-  chkBattery.addEventListener('change', (e) => { state.repairs.degradedParts.battery = e.target.checked; calculateTotal(); });
-  chkFuelTank.addEventListener('change', (e) => { state.repairs.degradedParts.fuelTank = e.target.checked; calculateTotal(); });
-  chkDriveShaft.addEventListener('change', (e) => { state.repairs.degradedParts.driveShaft = e.target.checked; calculateTotal(); });
-  chkCylinder.addEventListener('change', (e) => { state.repairs.degradedParts.cylinder = e.target.checked; calculateTotal(); });
-
-  // Tires
-  groupTires.querySelectorAll('.lvl-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const isAlreadyActive = btn.classList.contains('active');
-      groupTires.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
-
-      if (isAlreadyActive) {
-        state.repairs.tiresCount = 0;
-        priceTiresDisplay.textContent = '未選択';
-      } else {
-        btn.classList.add('active');
-        const qty = parseInt(btn.getAttribute('data-qty'), 10);
-        state.repairs.tiresCount = qty;
-        priceTiresDisplay.textContent = formatJPY(qty * PRICES.repairs.tires);
+  // Copy Actions
+  if (btnCopyRepairTotal) {
+    btnCopyRepairTotal.addEventListener('click', () => {
+      const total = calculateTotal();
+      const str = total.toString();
+      if (window.AppCommon) {
+        window.AppCommon.copyToClipboard(str, `修理合計額 「 ${str} 」 をコピーしました！`);
       }
-      calculateTotal();
     });
-  });
+  }
 
-  // Counters (NOS & Items)
-  document.querySelectorAll('.cnt-input').forEach(input => {
-    input.addEventListener('focus', () => input.select());
-    const handleInputChange = () => {
-      let val = parseInt(input.value, 10);
-      const min = parseInt(input.min, 10) || 0;
-      const max = parseInt(input.max, 10) || 99;
-      if (isNaN(val) || val < min) val = min;
-      if (val > max) val = max;
-
-      const id = input.id;
-      if (id === 'cntNosRefill') state.repairs.nosRefillCount = val;
-      if (id === 'cntNosNew') state.repairs.nosNewCount = val;
-      if (id === 'cntDuctTape') state.items.ductTape = val;
-      if (id === 'cntCarWash') state.items.carWash = val;
-      if (id === 'cntNeonCtrl') state.items.neonCtrl = val;
-      if (id === 'cntAirSusCtrl') state.items.airSusCtrl = val;
-
-      calculateTotal();
-    };
-    input.addEventListener('input', handleInputChange);
-    input.addEventListener('change', () => {
-      if (input.value === '') input.value = 0;
-      handleInputChange();
+  if (btnCopyRepairSummary) {
+    btnCopyRepairSummary.addEventListener('click', () => {
+      const summary = getSummaryText();
+      if (window.AppCommon) {
+        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`);
+      }
     });
-  });
+  }
 
-  document.querySelectorAll('.cnt-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.getAttribute('data-target');
-      const input = document.getElementById(targetId);
-      if (!input) return;
-      const isInc = btn.classList.contains('inc');
-      let val = parseInt(input.value, 10) || 0;
-      const min = parseInt(input.min, 10) || 0;
-      const max = parseInt(input.max, 10) || 99;
+  // Reset Button
+  if (btnResetRepair) {
+    btnResetRepair.addEventListener('click', () => {
+      state.aircraft = false;
+      if (chkAircraft) chkAircraft.checked = false;
 
-      if (isInc && val < max) val++;
-      if (!isInc && val > min) val--;
+      state.repairs = {};
+      state.items = {};
 
-      input.value = val;
-      if (targetId === 'cntNosRefill') state.repairs.nosRefillCount = val;
-      if (targetId === 'cntNosNew') state.repairs.nosNewCount = val;
-      if (targetId === 'cntDuctTape') state.items.ductTape = val;
-      if (targetId === 'cntCarWash') state.items.carWash = val;
-      if (targetId === 'cntNeonCtrl') state.items.neonCtrl = val;
-      if (targetId === 'cntAirSusCtrl') state.items.airSusCtrl = val;
-
+      renderRepairUI();
       calculateTotal();
+
+      if (window.AppCommon) {
+        window.AppCommon.showToast('すべての選択をリセットしました');
+      }
     });
-  });
-
-  // Copy Handlers
-  btnCopyRepairTotal.addEventListener('click', () => {
-    const total = calculateTotal();
-    const str = total.toString();
-    copyToClipboard(str, `修理請求額 「 ${str} 」 をコピーしました！`);
-  });
-
-  btnCopyRepairSummary.addEventListener('click', () => {
-    const text = getSummaryText();
-    copyToClipboard(text, `「 ${text} 」 をコピーしました！`);
-  });
-
-  // Reset
-  btnResetRepair.addEventListener('click', () => {
-    state.aircraft = false;
-    chkAircraft.checked = false;
-
-    chkFullRepair.checked = false;
-    chkEngineRepair.checked = false;
-    chkBodyRepair.checked = false;
-    chkOilPump.checked = false;
-    chkBattery.checked = false;
-    chkFuelTank.checked = false;
-    chkDriveShaft.checked = false;
-    chkCylinder.checked = false;
-
-    cntNosRefill.value = 0;
-    cntNosNew.value = 0;
-    cntDuctTape.value = 0;
-    cntCarWash.value = 0;
-    cntNeonCtrl.value = 0;
-    cntAirSusCtrl.value = 0;
-
-    state.repairs = {
-      full: false, engine: false, body: false,
-      degradedParts: { oilPump: false, battery: false, fuelTank: false, driveShaft: false, cylinder: false },
-      tiresCount: 0, nosRefillCount: 0, nosNewCount: 0
-    };
-    state.items = { ductTape: 0, carWash: 0, neonCtrl: 0, airSusCtrl: 0 };
-
-    groupTires.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
-    priceTiresDisplay.textContent = '未選択';
-
-    calculateTotal();
-    showToast('すべての選択をリセットしました');
-  });
-
-  updateModeUI();
+  }
 });
