@@ -92,333 +92,77 @@
     </section>
 
     <!-- Main Grid Content (Custom Page) -->
-    <main class="main-grid">
-      <!-- 横並びセクション (最上部): 性能カスタム ＆ 劣化抑制パーツ -->
-      <!-- Section 1: 性能カスタム (左) -->
-      <div class="card category-card">
+    <main class="main-grid" id="customMainGrid">
+      <!-- Section 1: 性能カスタム (左カラム) -->
+      <div class="card category-card" id="cardCustomPerformance">
         <div class="card-header">
           <h2 class="card-title">⚡ 性能カスタム</h2>
         </div>
-        <div class="card-body">
-          <!-- エンジン (Lv1~5) -->
-          <div class="level-select-group" data-key="engine">
-            <div class="level-header">
-              <span class="item-name">エンジン</span>
-              <span class="level-selected-price" id="priceEngineCustom">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlEngine">
-              <button class="lvl-btn" data-level="1" data-price="3000000">Lv1 <small>¥300万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="5000000">Lv2 <small>¥500万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="10000000">Lv3 <small>¥1000万</small></button>
-              <button class="lvl-btn" data-level="4" data-price="15000000">Lv4 <small>¥1500万</small></button>
-              <button class="lvl-btn" data-level="5" data-price="25000000">Lv5 <small>¥2500万</small></button>
-            </div>
-          </div>
-
-          <!-- ブレーキ (Lv1~3) -->
-          <div class="level-select-group" data-key="brakes">
-            <div class="level-header">
-              <span class="item-name">ブレーキ</span>
-              <span class="level-selected-price" id="priceBrakes">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlBrakes">
-              <button class="lvl-btn" data-level="1" data-price="3000000">Lv1 <small>¥300万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="6000000">Lv2 <small>¥600万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="8000000">Lv3 <small>¥800万</small></button>
-            </div>
-          </div>
-
-          <!-- サスペンション (Lv1~5) -->
-          <div class="level-select-group" data-key="suspension">
-            <div class="level-header">
-              <span class="item-name">サスペンション</span>
-              <span class="level-selected-price" id="priceSuspension">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlSuspension">
-              <button class="lvl-btn" data-level="1" data-price="3000000">Lv1 <small>¥300万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="5000000">Lv2 <small>¥500万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="8000000">Lv3 <small>¥800万</small></button>
-              <button class="lvl-btn" data-level="4" data-price="10000000">Lv4 <small>¥1000万</small></button>
-              <button class="lvl-btn" data-level="5" data-price="12000000">Lv5 <small>¥1200万</small></button>
-            </div>
-          </div>
-
-          <!-- トランスミッション (Lv1~4) -->
-          <div class="level-select-group" data-key="transmission">
-            <div class="level-header">
-              <span class="item-name">トランスミッション</span>
-              <span class="level-selected-price" id="priceTransmission">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlTransmission">
-              <button class="lvl-btn" data-level="1" data-price="3000000">Lv1 <small>¥300万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="5000000">Lv2 <small>¥500万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="10000000">Lv3 <small>¥1000万</small></button>
-              <button class="lvl-btn" data-level="4" data-price="12000000">Lv4 <small>¥1200万</small></button>
-            </div>
-          </div>
-
-          <!-- 単一選択パーツ (ターボ, アンチラグ, ハーネス) -->
-          <div class="single-perf-group" style="display: flex; flex-direction: column; gap: 8px;">
-            <div class="item-row toggle-item">
-              <label class="toggle-card" for="chkTurbo">
-                <input type="checkbox" id="chkTurbo">
-                <div class="toggle-content">
-                  <span class="item-name">ターボ</span>
-                  <span class="item-price" id="priceTurbo">¥3,000,000</span>
-                </div>
-              </label>
-            </div>
-
-            <div class="item-row toggle-item">
-              <label class="toggle-card" for="chkAntiLag">
-                <input type="checkbox" id="chkAntiLag">
-                <div class="toggle-content">
-                  <span class="item-name">アンチラグ</span>
-                  <span class="item-price" id="priceAntiLag">¥5,000,000</span>
-                </div>
-              </label>
-            </div>
-
-            <div class="item-row toggle-item">
-              <label class="toggle-card" for="chkHarness">
-                <input type="checkbox" id="chkHarness">
-                <div class="toggle-content">
-                  <span class="item-name">ハーネス</span>
-                  <span class="item-price" id="priceHarness">¥1,000,000</span>
-                </div>
-              </label>
-            </div>
-          </div>
+        <div class="card-body" id="customPerformanceContainer">
+          <!-- JSで動的レンダリング -->
         </div>
       </div>
 
-      <!-- Section 2: 劣化抑制パーツ (右) -->
-      <div class="card category-card">
-        <div class="card-header">
-          <h2 class="card-title">🛡️ 劣化抑制パーツ</h2>
-        </div>
-        <div class="card-body">
-          <div class="level-select-group" data-key="durabilityOilPump">
-            <div class="level-header">
-              <span class="item-name">オイルポンプ</span>
-              <span class="level-selected-price" id="priceDurabilityOilPump">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlDurabilityOilPump">
-              <button class="lvl-btn" data-level="1" data-price="300000">Lv1 <small>¥30万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="500000">Lv2 <small>¥50万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="700000">Lv3 <small>¥70万</small></button>
-            </div>
+      <!-- Section 2~5: 外装・NOS・販売品・割引 (右カラム) -->
+      <div class="right-column-group">
+        <!-- Section 2: 外装カスタム -->
+        <div class="card category-card" id="cardCustomExterior">
+          <div class="card-header">
+            <h2 class="card-title">🎨 外装カスタム</h2>
           </div>
-
-          <div class="level-select-group" data-key="durabilityBattery">
-            <div class="level-header">
-              <span class="item-name">バッテリー</span>
-              <span class="level-selected-price" id="priceDurabilityBattery">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlDurabilityBattery">
-              <button class="lvl-btn" data-level="1" data-price="300000">Lv1 <small>¥30万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="500000">Lv2 <small>¥50万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="700000">Lv3 <small>¥70万</small></button>
-            </div>
-          </div>
-
-          <div class="level-select-group" data-key="durabilityFuelTank">
-            <div class="level-header">
-              <span class="item-name">燃料タンク</span>
-              <span class="level-selected-price" id="priceDurabilityFuelTank">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlDurabilityFuelTank">
-              <button class="lvl-btn" data-level="1" data-price="300000">Lv1 <small>¥30万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="500000">Lv2 <small>¥50万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="700000">Lv3 <small>¥70万</small></button>
-            </div>
-          </div>
-
-          <div class="level-select-group" data-key="durabilityDriveShaft">
-            <div class="level-header">
-              <span class="item-name">ドライブシャフト</span>
-              <span class="level-selected-price" id="priceDurabilityDriveShaft">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlDurabilityDriveShaft">
-              <button class="lvl-btn" data-level="1" data-price="300000">Lv1 <small>¥30万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="500000">Lv2 <small>¥50万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="700000">Lv3 <small>¥70万</small></button>
-            </div>
-          </div>
-
-          <div class="level-select-group" data-key="durabilityCylinder">
-            <div class="level-header">
-              <span class="item-name">シリンダー</span>
-              <span class="level-selected-price" id="priceDurabilityCylinder">未選択</span>
-            </div>
-            <div class="level-buttons" id="lvlDurabilityCylinder">
-              <button class="lvl-btn" data-level="1" data-price="300000">Lv1 <small>¥30万</small></button>
-              <button class="lvl-btn" data-level="2" data-price="500000">Lv2 <small>¥50万</small></button>
-              <button class="lvl-btn" data-level="3" data-price="700000">Lv3 <small>¥70万</small></button>
-            </div>
+          <div class="card-body" id="customExteriorContainer">
+            <!-- JSで動的レンダリング -->
           </div>
         </div>
-      </div>
 
-      <!-- Section 3: NOS -->
-      <div class="card category-card">
-        <div class="card-header">
-          <h2 class="card-title">🚀 NOS</h2>
-        </div>
-        <div class="card-body">
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">NOS補充</span>
-              <span class="item-unit-price" id="priceNosRefillCustom">¥400,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntNosRefill">-</button>
-              <input type="number" id="cntNosRefill" value="0" min="0" max="10" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntNosRefill">+</button>
-            </div>
+        <!-- Section 3: NOS -->
+        <div class="card category-card" id="cardCustomRepairs">
+          <div class="card-header">
+            <h2 class="card-title">🚀 NOS</h2>
           </div>
-
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">NOS新規</span>
-              <span class="item-unit-price" id="priceNosNewCustom">¥500,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntNosNew">-</button>
-              <input type="number" id="cntNosNew" value="0" min="0" max="10" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntNosNew">+</button>
-            </div>
+          <div class="card-body" id="customRepairsContainer">
+            <!-- JSで動的レンダリング -->
           </div>
         </div>
-      </div>
 
-      <!-- Section 4: 外装カスタム -->
-      <div class="card category-card">
-        <div class="card-header">
-          <h2 class="card-title">🎨 外装カスタム</h2>
-        </div>
-        <div class="card-body">
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">基本外装</span>
-              <span class="item-unit-price" id="priceExteriorBase">¥50,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntExteriorBase">-</button>
-              <input type="number" id="cntExteriorBase" value="0" min="0" max="20" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntExteriorBase">+</button>
-            </div>
+        <!-- Section 4: 販売品 -->
+        <div class="card category-card" id="cardCustomItems">
+          <div class="card-header">
+            <h2 class="card-title">📦 販売品・アクセサリー</h2>
           </div>
-
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">カスタムホイール</span>
-              <span class="item-unit-price" id="priceExteriorWheels">¥200,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntWheels">-</button>
-              <input type="number" id="cntWheels" value="0" min="0" max="20" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntWheels">+</button>
-            </div>
-          </div>
-
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">スタンス変更</span>
-              <span class="item-unit-price" id="priceExteriorStance">¥100,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntStance">-</button>
-              <input type="number" id="cntStance" value="0" min="0" max="20" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntStance">+</button>
-            </div>
+          <div class="card-body" id="customItemsContainer">
+            <!-- JSで動的レンダリング -->
           </div>
         </div>
-      </div>
 
-      <!-- Section 5: 販売品 -->
-      <div class="card category-card">
-        <div class="card-header">
-          <h2 class="card-title">📦 販売品・アクセサリー</h2>
-        </div>
-        <div class="card-body">
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">ダクトテープ</span>
-              <span class="item-unit-price" id="priceDuctTapeCustom">¥50,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntDuctTape">-</button>
-              <input type="number" id="cntDuctTape" value="0" min="0" max="50" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntDuctTape">+</button>
-            </div>
+        <!-- Section 5: 割引 ＆ 値引き設定 -->
+        <div class="card category-card" id="cardCustomDiscount">
+          <div class="card-header">
+            <h2 class="card-title">🏷️ 割引・値引き設定</h2>
           </div>
+          <div class="card-body">
+            <div class="discount-preset-row">
+              <button id="btnDisc3" class="discount-btn" data-discount="30">
+                <span class="icon">🏷️</span> 3割引き <small>(30% OFF)</small>
+              </button>
+              <button id="btnDisc5" class="discount-btn" data-discount="50">
+                <span class="icon">🏷️</span> 5割引き <small>(50% OFF)</small>
+              </button>
+              <button id="btnDisc7" class="discount-btn" data-discount="70">
+                <span class="icon">🏷️</span> 7割引き <small>(70% OFF)</small>
+              </button>
+            </div>
 
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">洗車キット</span>
-              <span class="item-unit-price" id="priceCarWashCustom">¥50,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntCarWash">-</button>
-              <input type="number" id="cntCarWash" value="0" min="0" max="50" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntCarWash">+</button>
-            </div>
-          </div>
-
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">ネオンコントローラー</span>
-              <span class="item-unit-price" id="priceNeonCtrlCustom">¥200,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntNeonCtrl">-</button>
-              <input type="number" id="cntNeonCtrl" value="0" min="0" max="15" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntNeonCtrl">+</button>
-            </div>
-          </div>
-
-          <div class="item-row counter-item">
-            <div class="counter-info">
-              <span class="item-name">エアサスコントローラー</span>
-              <span class="item-unit-price" id="priceAirSusCtrlCustom">¥1,000,000</span>
-            </div>
-            <div class="counter-controls">
-              <button class="cnt-btn dec" data-target="cntAirSusCtrl">-</button>
-              <input type="number" id="cntAirSusCtrl" value="0" min="0" max="15" class="cnt-input">
-              <button class="cnt-btn inc" data-target="cntAirSusCtrl">+</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section 6: 割引 ＆ 値引き設定 (カスタム側のみ) -->
-      <div class="card category-card">
-        <div class="card-header">
-          <h2 class="card-title">🏷️ 割引・値引き設定</h2>
-        </div>
-        <div class="card-body">
-          <div class="discount-preset-row">
-            <button id="btnDisc3" class="discount-btn" data-discount="30">
-              <span class="icon">🏷️</span> 3割引き <small>(30% OFF)</small>
-            </button>
-            <button id="btnDisc5" class="discount-btn" data-discount="50">
-              <span class="icon">🏷️</span> 5割引き <small>(50% OFF)</small>
-            </button>
-            <button id="btnDisc7" class="discount-btn" data-discount="70">
-              <span class="icon">🏷️</span> 7割引き <small>(70% OFF)</small>
-            </button>
-          </div>
-
-          <div class="custom-discount-box">
-            <div class="discount-input-group">
-              <label for="customDiscountType">手動割引:</label>
-              <select id="customDiscountType" class="discount-select">
-                <option value="none">なし</option>
-                <option value="percent">割合 (%)</option>
-                <option value="fixed">定額 (円)</option>
-              </select>
-              <input type="number" id="customDiscountVal" value="0" min="0" class="discount-num-input" placeholder="0" disabled>
+            <div class="custom-discount-box">
+              <div class="discount-input-group">
+                <label for="customDiscountType">手動割引:</label>
+                <select id="customDiscountType" class="discount-select">
+                  <option value="none">なし</option>
+                  <option value="percent">割合 (%)</option>
+                  <option value="fixed">定額 (円)</option>
+                </select>
+                <input type="number" id="customDiscountVal" value="0" min="0" class="discount-num-input" placeholder="0" disabled>
+              </div>
             </div>
           </div>
         </div>

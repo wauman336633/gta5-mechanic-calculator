@@ -112,3 +112,33 @@ test.describe('Buyback Calculator E2E Interaction', () => {
     }
   });
 });
+
+test.describe('Settings Dynamic Configuration E2E Interaction', () => {
+  test('authenticates and displays dynamic item editor', async ({ page }) => {
+    await page.goto('/settings.html');
+
+    // パスコードモーダル
+    const modal = page.locator('#modalPasscode');
+    await expect(modal).toBeVisible();
+
+    // パスコード送信 (sample店舗は1111)
+    const submitBtn = modal.locator('button[type="submit"]');
+    await submitBtn.click();
+
+    // モーダルが非表示になり、エディタが有効化される
+    await expect(modal).toHaveClass(/hidden/);
+
+    // タブ切り替え
+    const customTabBtn = page.locator('button.settings-tab-btn[data-tab="tabCustom"]');
+    await customTabBtn.click();
+    await expect(page.locator('#tabCustom')).toHaveClass(/active/);
+
+    const buybackTabBtn = page.locator('button.settings-tab-btn[data-tab="tabBuyback"]');
+    await buybackTabBtn.click();
+    await expect(page.locator('#tabBuyback')).toHaveClass(/active/);
+
+    // 買取素材リストのアイテムが表示されていること
+    const buybackItems = page.locator('#list_buyback .settings-item-row');
+    await expect(buybackItems.first()).toBeVisible();
+  });
+});
