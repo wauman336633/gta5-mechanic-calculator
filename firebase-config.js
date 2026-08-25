@@ -817,7 +817,8 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
   
   const githubIssueUrl = `https://github.com/${GITHUB_REPO}/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}&labels=${encodeURIComponent(currentTypeInfo.label)}`;
 
-  // 1. Firestoreへ保存
+  // 1. Firestoreへ保存（エラー時も後続のDiscord送信を継続）
+  let firestoreSaved = false;
   if (db) {
     try {
       await db.collection('feedbacks').add({
@@ -831,13 +832,14 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         githubIssueUrl
       });
+      firestoreSaved = true;
     } catch (dbErr) {
-      console.error("Firestore feedback save error:", dbErr);
-      throw new Error("データの保存に失敗しました。時間をおいて再試行してください。");
+      console.warn("Firestore feedback save warning (proceeding to Discord webhook):", dbErr);
     }
   }
 
   // 2. GASプロキシ経由でDiscordへ通知（設定されている場合）
+  let discordNotified = false;
   if (GAS_FEEDBACK_API_URL && GAS_FEEDBACK_API_URL.trim().startsWith('http')) {
     try {
       await fetch(GAS_FEEDBACK_API_URL, {
@@ -855,9 +857,15 @@ async function sendFeedback({ type = 'bug', content = '', page = '', shopId = ''
           githubIssueUrl
         })
       });
+      discordNotified = true;
     } catch (gasErr) {
       console.warn("GAS notification sending failed:", gasErr);
     }
+  }
+
+  // FirestoreとDiscord通知の両方が失敗した場合のみエラーをスロー
+  if (!firestoreSaved && !discordNotified && db) {
+    throw new Error("送信に失敗しました。時間をおいて再試行してください。");
   }
 
   return { success: true, githubIssueUrl };
