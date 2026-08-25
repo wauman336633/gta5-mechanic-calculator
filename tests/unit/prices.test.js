@@ -62,8 +62,18 @@ test('DEFAULT_CUSTOM_CONFIG and dual-mode bidirectional synchronization', () => 
   const code = fs.readFileSync(path.join(rootDir, 'firebase-config.js'), 'utf-8');
   const context = {
     window: {},
-    document: { getElementById: () => null, addEventListener: () => {}, removeEventListener: () => {} },
-    localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+    document: { 
+      getElementById: () => null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    },
+    localStorage: {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    },
+    crypto: globalThis.crypto,
+    TextEncoder: globalThis.TextEncoder,
     console: console,
   };
   vm.createContext(context);
@@ -96,4 +106,31 @@ test('DEFAULT_CUSTOM_CONFIG and dual-mode bidirectional synchronization', () => 
   assert.ok(normalized.prices);
   assert.ok(normalized.customConfig);
   assert.equal(normalized.customConfig.buyback.length, 8);
+});
+
+test('hashPasscode generates valid 64-character SHA-256 hex string', async () => {
+  const code = fs.readFileSync(path.join(rootDir, 'firebase-config.js'), 'utf-8');
+  const context = {
+    window: {},
+    document: { getElementById: () => null, addEventListener: () => {} },
+    localStorage: { getItem: () => null, setItem: () => {} },
+    crypto: globalThis.crypto,
+    TextEncoder: globalThis.TextEncoder,
+    console: console,
+  };
+  vm.createContext(context);
+  vm.runInContext(code, context);
+
+  const ShopManager = context.window.ShopManager;
+  const hash = await ShopManager.hashPasscode('1234');
+  assert.equal(typeof hash, 'string');
+  assert.equal(hash.length, 64);
+  assert.equal(/^[a-f0-9]{64}$/.test(hash), true);
+
+  // sample店舗の検証
+  const isSampleValid = await ShopManager.verifyShopPasscode('sample', '1111');
+  assert.equal(isSampleValid, true);
+
+  const isSampleInvalid = await ShopManager.verifyShopPasscode('sample', 'wrong');
+  assert.equal(isSampleInvalid, false);
 });

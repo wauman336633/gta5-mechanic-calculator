@@ -8,9 +8,67 @@ document.addEventListener('DOMContentLoaded', () => {
   const errDisplay = document.getElementById('registerError');
   const btnSubmit = document.getElementById('btnSubmitRegister');
 
+  // Google Owner Auth UI
+  const ownerLoggedOut = document.getElementById('ownerLoggedOut');
+  const ownerLoggedIn = document.getElementById('ownerLoggedIn');
+  const ownerDisplayName = document.getElementById('ownerDisplayName');
+  const ownerEmail = document.getElementById('ownerEmail');
+  const btnGoogleLogin = document.getElementById('btnGoogleLoginRegister');
+  const btnGoogleLogout = document.getElementById('btnGoogleLogoutRegister');
+
+  let currentAuthUser = null;
+
+  if (window.ShopManager && window.ShopManager.onAuthChange) {
+    window.ShopManager.onAuthChange((user) => {
+      currentAuthUser = user;
+      updateAuthUI();
+    });
+  }
+
+  function updateAuthUI() {
+    if (currentAuthUser) {
+      if (ownerLoggedOut) ownerLoggedOut.style.display = 'none';
+      if (ownerLoggedIn) {
+        ownerLoggedIn.style.display = 'flex';
+        ownerDisplayName.textContent = currentAuthUser.displayName || 'Googleユーザー';
+        ownerEmail.textContent = currentAuthUser.email || '';
+      }
+    } else {
+      if (ownerLoggedOut) ownerLoggedOut.style.display = 'block';
+      if (ownerLoggedIn) ownerLoggedIn.style.display = 'none';
+    }
+  }
+
+  if (btnGoogleLogin) {
+    btnGoogleLogin.addEventListener('click', async () => {
+      errDisplay.style.display = 'none';
+      try {
+        await window.ShopManager.signInWithGoogle();
+      } catch (err) {
+        showError("Googleログインに失敗しました: " + (err.message || err));
+      }
+    });
+  }
+
+  if (btnGoogleLogout) {
+    btnGoogleLogout.addEventListener('click', async () => {
+      errDisplay.style.display = 'none';
+      try {
+        await window.ShopManager.signOutUser();
+      } catch (err) {
+        showError("ログアウトに失敗しました: " + (err.message || err));
+      }
+    });
+  }
+
   formRegister.addEventListener('submit', async (e) => {
     e.preventDefault();
     errDisplay.style.display = 'none';
+
+    if (!currentAuthUser) {
+      showError("店舗を開設するには、Googleアカウントでのログインが必要です。上記の「Googleアカウントでログイン」ボタンを押してください。");
+      return;
+    }
 
     const shopName = txtShopName.value.trim();
     const shopId = txtShopId.value.trim().toLowerCase();
