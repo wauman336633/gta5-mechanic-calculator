@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const shopId = window.ShopManager.getShopId();
   let currentConfig = JSON.parse(JSON.stringify(window.ShopManager.DEFAULT_CUSTOM_CONFIG));
   let authenticatedPasscode = null;
+  let isOwnerAuthenticated = false;
+  let currentShopMeta = null;
+  let currentAuthUser = null;
 
   // DOM Elements
   const modalPasscode = document.getElementById('modalPasscode');
@@ -13,6 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsContent = document.getElementById('settingsContent');
   const formSettings = document.getElementById('formSettings');
   const currentShopName = document.getElementById('currentShopName');
+  const btnGoogleOwnerLogin = document.getElementById('btnGoogleOwnerLogin');
+
+  // Security Tab Elements
+  const secOwnerStatus = document.getElementById('secOwnerStatus');
+  const secOwnerDetail = document.getElementById('secOwnerDetail');
+  const secOwnerActions = document.getElementById('secOwnerActions');
+  const secClaimBanner = document.getElementById('secClaimBanner');
+  const btnClaimOwner = document.getElementById('btnClaimOwner');
+  const groupCurrentPasscode = document.getElementById('groupCurrentPasscode');
+  const txtCurrentPasscode = document.getElementById('txtCurrentPasscode');
+  const txtNewPasscode = document.getElementById('txtNewPasscode');
+  const txtNewPasscodeConfirm = document.getElementById('txtNewPasscodeConfirm');
+  const btnChangePasscode = document.getElementById('btnChangePasscode');
+  const changePasscodeMsg = document.getElementById('changePasscodeMsg');
 
   // モーダル関連
   const modalAddItem = document.getElementById('modalAddItem');
@@ -44,6 +61,77 @@ document.addEventListener('DOMContentLoaded', () => {
       txtPasscode.value = '1111';
       txtPasscode.placeholder = '1111';
     }
+    const modalOwnerAuthBox = document.getElementById('modalOwnerAuthBox');
+    if (modalOwnerAuthBox) {
+      modalOwnerAuthBox.style.display = 'none';
+    }
+  }
+
+  // 認証状態と店舗情報の初期ロード
+  async function loadShopMetaAndAuth() {
+    try {
+      if (window.ShopManager.getShopInfo) {
+        currentShopMeta = await window.ShopManager.getShopInfo(shopId);
+      }
+    } catch (e) {
+      console.warn("Failed to load shop meta", e);
+    }
+    checkOwnerAutoUnlock();
+    updateSecurityTabUI();
+  }
+
+  function checkOwnerAutoUnlock() {
+    if (!currentAuthUser || !currentShopMeta) return;
+    if (currentShopMeta.ownerUid && currentShopMeta.ownerUid === currentAuthUser.uid) {
+      // オーナー本人であればパスコード入力不要でアンロック
+      isOwnerAuthenticated = true;
+      unlockSettingsUI();
+    }
+  }
+
+  function unlockSettingsUI() {
+    modalPasscode.classList.add('hidden');
+    settingsContent.style.opacity = '1';
+    settingsContent.style.pointerEvents = 'auto';
+    if (currentConfig) {
+      renderAllSections();
+    }
+    updateSecurityTabUI();
+  }
+
+  if (window.ShopManager && window.ShopManager.onAuthChange) {
+    window.ShopManager.onAuthChange((user) => {
+      currentAuthUser = user;
+      checkOwnerAutoUnlock();
+      updateSecurityTabUI();
+    });
+  }
+
+  loadShopMetaAndAuth();
+
+  // オーナーとしてGoogleログインボタン
+  if (btnGoogleOwnerLogin) {
+    btnGoogleOwnerLogin.addEventListener('click', async () => {
+      passcodeError.style.display = 'none';
+      try {
+        const user = await window.ShopManager.signInWithGoogle();
+        currentAuthUser = user;
+        if (currentShopMeta && currentShopMeta.ownerUid) {
+          if (currentShopMeta.ownerUid === user.uid) {
+            isOwnerAuthenticated = true;
+            unlockSettingsUI();
+            if (window.AppCommon) window.AppCommon.showToast("👑 オーナーとしてログインしました");
+          } else {
+            showPasscodeError("ログインしたGoogleアカウントはこの店舗のオーナーではありません。");
+          }
+        } else {
+          // オーナー未登録店舗の場合
+          showPasscodeError("この店舗にはオーナーが未登録です。管理用パスコードでログイン後、設定画面からオーナー登録を行ってください。");
+        }
+      } catch (err) {
+        showPasscodeError("Googleログインに失敗しました: " + (err.message || err));
+      }
+    });
   }
 
   // タブ切り替え制御
@@ -69,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       currentConfig = JSON.parse(JSON.stringify(window.ShopManager.DEFAULT_CUSTOM_CONFIG));
     }
-    if (authenticatedPasscode) {
+    if (authenticatedPasscode || isOwnerAuthenticated) {
       renderAllSections();
     }
   });
@@ -80,27 +168,175 @@ document.addEventListener('DOMContentLoaded', () => {
     passcodeError.style.display = 'none';
     const inputCode = txtPasscode.value.trim();
 
+    const btnSubmitPasscode = document.getElementById('btnSubmitPasscode');
+    if (btnSubmitPasscode) {
+      btnSubmitPasscode.disabled = true;
+      btnSubmitPasscode.textContent = "検証中...";
+    }
+
     try {
       const isValid = await window.ShopManager.verifyShopPasscode(shopId, inputCode);
       if (isValid) {
         authenticatedPasscode = inputCode;
-        modalPasscode.classList.add('hidden');
-        settingsContent.style.opacity = '1';
-        settingsContent.style.pointerEvents = 'auto';
-        if (currentConfig) {
-          renderAllSections();
-        }
+        unlockSettingsUI();
       } else {
         showPasscodeError("パスコードが正しくありません。");
       }
     } catch (err) {
-      showPasscodeError("認証エラーが発生しました。");
+      if (err && err.code === 'not-found') {
+        showPasscodeError("指定された店舗が存在しません。URLをご確認ください。");
+      } else if (err && err.message) {
+        showPasscodeError("認証エラー: " + err.message);
+      } else {
+        showPasscodeError("通信エラーが発生しました。時間をおいて再試行してください。");
+      }
+    } finally {
+      if (btnSubmitPasscode) {
+        btnSubmitPasscode.disabled = false;
+        btnSubmitPasscode.textContent = "認証する";
+      }
     }
   });
 
   function showPasscodeError(msg) {
     passcodeError.textContent = msg;
     passcodeError.style.display = 'block';
+  }
+
+  // セキュリティタブのUI更新
+  function updateSecurityTabUI() {
+    if (!secOwnerStatus) return;
+
+    const isOwner = currentShopMeta && currentAuthUser && currentShopMeta.ownerUid === currentAuthUser.uid;
+
+    if (isOwner) {
+      secOwnerStatus.innerHTML = "👑 <span style='color: #60a5fa;'>オーナー認証済み</span>";
+      secOwnerDetail.textContent = `アカウント: ${currentAuthUser.displayName || 'Googleユーザー'} (${currentAuthUser.email || ''})`;
+      secOwnerActions.innerHTML = `<button type="button" id="btnSecLogout" class="btn-sub-action" style="font-size: 0.8rem; padding: 4px 8px;">ログアウト</button>`;
+      if (secClaimBanner) secClaimBanner.style.display = 'none';
+      if (groupCurrentPasscode) groupCurrentPasscode.style.display = 'none'; // オーナーは現在のパスコード不要
+    } else if (currentAuthUser) {
+      secOwnerStatus.textContent = `👤 ログイン中: ${currentAuthUser.displayName || 'Googleユーザー'}`;
+      secOwnerDetail.textContent = `メール: ${currentAuthUser.email || ''} (この店舗のオーナーではありません)`;
+      secOwnerActions.innerHTML = `<button type="button" id="btnSecLogout" class="btn-sub-action" style="font-size: 0.8rem; padding: 4px 8px;">ログアウト</button>`;
+      
+      if (currentShopMeta && !currentShopMeta.ownerUid && shopId !== 'sample') {
+        if (secClaimBanner) secClaimBanner.style.display = 'block';
+      } else {
+        if (secClaimBanner) secClaimBanner.style.display = 'none';
+      }
+      if (groupCurrentPasscode) groupCurrentPasscode.style.display = 'block';
+    } else {
+      secOwnerStatus.textContent = "👤 未ログイン（パスコード認証で操作中）";
+      secOwnerDetail.textContent = "Googleアカウントでログインすると、オーナー機能を利用できます。";
+      secOwnerActions.innerHTML = `<button type="button" id="btnSecLogin" class="btn-secondary" style="font-size: 0.8rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px;">Googleログイン</button>`;
+      if (secClaimBanner) secClaimBanner.style.display = 'none';
+      if (groupCurrentPasscode) groupCurrentPasscode.style.display = 'block';
+    }
+
+    const btnSecLogin = document.getElementById('btnSecLogin');
+    if (btnSecLogin) {
+      btnSecLogin.addEventListener('click', async () => {
+        try {
+          await window.ShopManager.signInWithGoogle();
+        } catch (e) {
+          alert("ログイン失敗: " + (e.message || e));
+        }
+      });
+    }
+
+    const btnSecLogout = document.getElementById('btnSecLogout');
+    if (btnSecLogout) {
+      btnSecLogout.addEventListener('click', async () => {
+        try {
+          await window.ShopManager.signOutUser();
+        } catch (e) {
+          alert("ログアウト失敗: " + (e.message || e));
+        }
+      });
+    }
+  }
+
+  // オーナー権限引き継ぎ（Google連携）
+  if (btnClaimOwner) {
+    btnClaimOwner.addEventListener('click', async () => {
+      if (!authenticatedPasscode) {
+        alert("オーナー登録を行うには、現在の管理用パスコードでの認証が必要です。");
+        return;
+      }
+      if (!confirm("現在ログイン中のGoogleアカウントを、この店舗のオーナーとして登録しますか？")) {
+        return;
+      }
+
+      btnClaimOwner.disabled = true;
+      btnClaimOwner.textContent = "登録中...";
+      try {
+        await window.ShopManager.claimShopOwnership(shopId, authenticatedPasscode);
+        alert("👑 オーナー登録が完了しました！以降はGoogleログインで管理・再設定が可能です。");
+        await loadShopMetaAndAuth();
+      } catch (err) {
+        alert("オーナー登録失敗: " + (err.message || err));
+      } finally {
+        btnClaimOwner.disabled = false;
+        btnClaimOwner.textContent = "👑 現在のアカウントをオーナーとして登録";
+      }
+    });
+  }
+
+  // パスコード変更ボタン
+  if (btnChangePasscode) {
+    btnChangePasscode.addEventListener('click', async () => {
+      changePasscodeMsg.style.display = 'none';
+
+      const isOwner = currentShopMeta && currentAuthUser && currentShopMeta.ownerUid === currentAuthUser.uid;
+      const currentCode = txtCurrentPasscode ? txtCurrentPasscode.value.trim() : '';
+      const newCode = txtNewPasscode ? txtNewPasscode.value.trim() : '';
+      const confirmCode = txtNewPasscodeConfirm ? txtNewPasscodeConfirm.value.trim() : '';
+
+      if (!isOwner && !currentCode) {
+        showChangePasscodeError("現在のパスコードを入力してください。");
+        return;
+      }
+
+      if (!newCode || newCode.length < 4 || newCode.length > 32) {
+        showChangePasscodeError("新しいパスコードは4文字以上32文字以内で指定してください。");
+        return;
+      }
+
+      if (newCode !== confirmCode) {
+        showChangePasscodeError("新しいパスコード(確認用)が一致しません。");
+        return;
+      }
+
+      btnChangePasscode.disabled = true;
+      btnChangePasscode.textContent = "更新中...";
+
+      try {
+        await window.ShopManager.updateShopPasscode(shopId, newCode, isOwner ? null : currentCode);
+        authenticatedPasscode = newCode;
+        if (txtCurrentPasscode) txtCurrentPasscode.value = '';
+        if (txtNewPasscode) txtNewPasscode.value = '';
+        if (txtNewPasscodeConfirm) txtNewPasscodeConfirm.value = '';
+        showChangePasscodeSuccess("✅ パスコードを正常に更新しました！");
+      } catch (err) {
+        showChangePasscodeError("パスコード変更失敗: " + (err.message || err));
+      } finally {
+        btnChangePasscode.disabled = false;
+        btnChangePasscode.textContent = "🔑 パスコードを更新する";
+      }
+    });
+  }
+
+  function showChangePasscodeError(msg) {
+    changePasscodeMsg.textContent = msg;
+    changePasscodeMsg.style.color = '#ef4444';
+    changePasscodeMsg.style.display = 'block';
+  }
+
+  function showChangePasscodeSuccess(msg) {
+    changePasscodeMsg.textContent = msg;
+    changePasscodeMsg.style.color = '#10b981';
+    changePasscodeMsg.style.display = 'block';
   }
 
   // Helper: セクションの配列を取得 / 設定
@@ -438,7 +674,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // 設定更新の送信
   formSettings.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!authenticatedPasscode) return;
+    if (!authenticatedPasscode && !isOwnerAuthenticated) {
+      alert("設定を保存するには認証が必要です。");
+      return;
+    }
+
+    const btnSaveSettings = document.getElementById('btnSaveSettings');
+    if (btnSaveSettings) {
+      btnSaveSettings.disabled = true;
+      btnSaveSettings.textContent = "💾 保存中...";
+    }
 
     try {
       // 非破壊デュアルモードで customConfig と prices を同時更新
@@ -448,6 +693,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       alert("保存失敗: " + (err.message || "エラーが発生しました。"));
+    } finally {
+      if (btnSaveSettings) {
+        btnSaveSettings.disabled = false;
+        btnSaveSettings.textContent = "💾 設定を保存する";
+      }
     }
   });
 });

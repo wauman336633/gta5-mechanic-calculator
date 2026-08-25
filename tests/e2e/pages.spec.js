@@ -140,5 +140,11 @@ test.describe('Settings Dynamic Configuration E2E Interaction', () => {
     // 買取素材リストのアイテムが表示されていること
     const buybackItems = page.locator('#list_buyback .settings-item-row');
     await expect(buybackItems.first()).toBeVisible();
+
+    // オーナー・セキュリティタブへの切り替え
+    const securityTabBtn = page.locator('button.settings-tab-btn[data-tab="tabSecurity"]');
+    await securityTabBtn.click();
+    await expect(page.locator('#tabSecurity')).toHaveClass(/active/);
+    await expect(page.locator('#changePasscodeForm')).toBeVisible();
   });
 });

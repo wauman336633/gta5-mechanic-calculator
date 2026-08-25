@@ -359,6 +359,7 @@ const firebaseConfig = {
 };
 
 let db = null;
+let auth = null;
 let firebaseInitialized = false;
 
 function initFirebase() {
@@ -367,6 +368,9 @@ function initFirebase() {
       firebase.initializeApp(firebaseConfig);
     }
     db = firebase.firestore();
+    if (firebase.auth) {
+      auth = firebase.auth();
+    }
     firebaseInitialized = true;
   }
 }
@@ -547,7 +551,74 @@ function subscribeShopPrices(shopId, callback) {
   return unsubscribe;
 }
 
-// 4. 店舗の新規作成
+// 4. Google Authentication & ユーザー管理
+async function signInWithGoogle() {
+  initFirebase();
+  if (!auth) {
+    throw new Error("Firebase Auth が利用できません。");
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  const result = await auth.signInWithPopup(provider);
+  return result.user;
+}
+
+async function signOutUser() {
+  initFirebase();
+  if (auth) {
+    await auth.signOut();
+  }
+}
+
+function getCurrentUser() {
+  initFirebase();
+  return auth ? auth.currentUser : null;
+}
+
+function onAuthChange(callback) {
+  initFirebase();
+  if (auth) {
+    return auth.onAuthStateChanged(callback);
+  }
+  if (typeof callback === 'function') {
+    callback(null);
+  }
+  return () => {};
+}
+
+// 5. 店舗メタデータ取得
+async function getShopInfo(shopId) {
+  initFirebase();
+  const cleanId = (shopId || '').toLowerCase().trim();
+  if (cleanId === SAMPLE_SHOP_ID) {
+    return { id: SAMPLE_SHOP_ID, name: 'サンプル店舗', ownerUid: null };
+  }
+
+  if (firebaseInitialized && db) {
+    const docRef = db.collection('shops').doc(cleanId);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      return null;
+    }
+    const data = doc.data();
+    return {
+      id: cleanId,
+      name: data.name || cleanId,
+      ownerUid: data.ownerUid || null,
+      ownerEmail: data.ownerEmail || null,
+      ownerDisplayName: data.ownerDisplayName || null,
+      createdAt: data.createdAt || null,
+      updatedAt: data.updatedAt || null
+    };
+  } else {
+    const cached = localStorage.getItem(`shop_info_${cleanId}`);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+    return null;
+  }
+}
+
+// 6. 店舗の新規作成
 async function createShop(shopId, shopName, passcode) {
   initFirebase();
   const cleanId = (shopId || '').toLowerCase().trim();
@@ -567,6 +638,7 @@ async function createShop(shopId, shopName, passcode) {
   }
 
   const hashed = await hashPasscode(passcode);
+  const currentUser = getCurrentUser();
   
   const publicData = {
     id: cleanId,
@@ -575,6 +647,12 @@ async function createShop(shopId, shopName, passcode) {
     customConfig: DEFAULT_CUSTOM_CONFIG,
     createdAt: new Date().toISOString()
   };
+
+  if (currentUser) {
+    publicData.ownerUid = currentUser.uid;
+    publicData.ownerEmail = currentUser.email || '';
+    publicData.ownerDisplayName = currentUser.displayName || '';
+  }
 
   if (firebaseInitialized && db) {
     const docRef = db.collection('shops').doc(cleanId);
@@ -601,10 +679,11 @@ async function createShop(shopId, shopName, passcode) {
   return cleanId;
 }
 
-// 5. 価格設定の更新（非破壊デュアルモード保存）
+// 7. 価格設定の更新（非破壊デュアルモード保存）
 async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
   initFirebase();
   const cleanId = (shopId || '').toLowerCase().trim();
+  const currentUser = getCurrentUser();
 
   // sample店舗のパスコード検証（1111固定）
   if (cleanId === SAMPLE_SHOP_ID) {
@@ -613,7 +692,7 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
     }
   }
 
-  const hashedInput = await hashPasscode(passcode);
+  const hashedInput = passcode ? await hashPasscode(passcode) : '';
 
   // newCustomConfig と newPrices の整合性を自動調整
   let finalCustomConfig = newCustomConfig;
@@ -650,24 +729,42 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
       return true;
     }
 
-    // パスコード照合
-    const isValid = await verifyShopPasscode(cleanId, passcode);
-    if (!isValid) {
-      throw new Error("管理パスコードが一致しません。");
+    const data = doc.data() || {};
+    const isOwner = currentUser && data.ownerUid && data.ownerUid === currentUser.uid;
+
+    // オーナー本人でない場合はパスコード照合
+    if (!isOwner && cleanId !== SAMPLE_SHOP_ID) {
+      const isValid = await verifyShopPasscode(cleanId, passcode);
+      if (!isValid) {
+        throw new Error("管理パスコードが一致しません。");
+      }
     }
 
     const updatePayload = {
       id: cleanId,
-      passcodeHash: hashedInput, // Firestoreルール照合用
       prices: finalPrices,
       customConfig: finalCustomConfig,
       updatedAt: new Date().toISOString()
     };
 
+    if (hashedInput) {
+      updatePayload.passcodeHash = hashedInput; // Firestoreルール照合用
+    }
+
     // レガシー店舗の場合、平文passcodeがあれば削除
-    const data = doc.data();
-    if (data && data.passcode) {
+    if (data.passcode) {
       updatePayload.passcode = firebase.firestore.FieldValue.delete();
+    }
+
+    // レガシー店舗でsecret未作成ならsecretを作成
+    const secretRef = docRef.collection('auth').doc('secret');
+    const secretDoc = await secretRef.get().catch(() => ({ exists: false }));
+    if (!secretDoc.exists && hashedInput) {
+      const batch = db.batch();
+      batch.update(docRef, updatePayload);
+      batch.set(secretRef, { passcodeHash: hashedInput });
+      await batch.commit();
+      return true;
     }
 
     await docRef.update(updatePayload);
@@ -677,10 +774,13 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
     const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
     if (cachedInfo && cleanId !== SAMPLE_SHOP_ID) {
       const parsed = JSON.parse(cachedInfo);
-      const isMatch = (parsed.passcodeHash && parsed.passcodeHash === hashedInput) ||
-                      (parsed.passcode && parsed.passcode === passcode);
-      if (!isMatch) {
-        throw new Error("管理パスコードが一致しません。");
+      const isOwner = currentUser && parsed.ownerUid && parsed.ownerUid === currentUser.uid;
+      if (!isOwner) {
+        const isMatch = (parsed.passcodeHash && parsed.passcodeHash === hashedInput) ||
+                        (parsed.passcode && parsed.passcode === passcode);
+        if (!isMatch) {
+          throw new Error("管理パスコードが一致しません。");
+        }
       }
     }
     localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({
@@ -694,7 +794,7 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
   }
 }
 
-// 6. 店舗検証（パスコードチェック）
+// 8. 店舗検証（パスコードチェック）
 async function verifyShopPasscode(shopId, passcode) {
   initFirebase();
   const cleanId = (shopId || '').toLowerCase().trim();
@@ -703,29 +803,38 @@ async function verifyShopPasscode(shopId, passcode) {
     return passcode === SAMPLE_PASSCODE;
   }
 
+  if (!passcode) {
+    return false;
+  }
+
   const hashedInput = await hashPasscode(passcode);
 
   if (firebaseInitialized && db) {
     const docRef = db.collection('shops').doc(cleanId);
     
-    // 1. 非公開auth/secretドキュメントをチェック（新方式）
-    try {
-      const secretDoc = await docRef.collection('auth').doc('secret').get();
-      if (secretDoc.exists) {
-        return secretDoc.data().passcodeHash === hashedInput;
-      }
-    } catch (e) {
-      // 権限エラー等で読めない場合は公開ドキュメントのレガシーチェックへ
-    }
-
-    // 2. 公開ドキュメント内のレガシー値チェック
+    // 店舗の存在確認
     const doc = await docRef.get();
     if (!doc.exists) {
-      return false;
+      const notFoundErr = new Error("店舗が存在しません。");
+      notFoundErr.code = "not-found";
+      throw notFoundErr;
     }
-    const data = doc.data();
-    return (data.passcodeHash && data.passcodeHash === hashedInput) ||
-           (data.passcode && data.passcode === passcode);
+
+    // /auth/verify への書き込み試行によるルール側照合
+    try {
+      const verifyRef = docRef.collection('auth').doc('verify');
+      await verifyRef.set({
+        passcodeHash: hashedInput,
+        passcode: passcode,
+        verifiedAt: new Date().toISOString()
+      });
+      return true;
+    } catch (e) {
+      if (e.code === 'permission-denied') {
+        return false;
+      }
+      throw e;
+    }
   } else {
     const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
     if (cachedInfo) {
@@ -734,6 +843,131 @@ async function verifyShopPasscode(shopId, passcode) {
              (parsed.passcode && parsed.passcode === passcode);
     }
     return false;
+  }
+}
+
+// 9. パスコードの変更・再設定
+async function updateShopPasscode(shopId, newPasscode, currentPasscode = null) {
+  initFirebase();
+  const cleanId = (shopId || '').toLowerCase().trim();
+
+  if (!newPasscode || newPasscode.length < 4 || newPasscode.length > 32) {
+    throw new Error("新しいパスコードは4〜32文字で入力してください。");
+  }
+
+  if (cleanId === SAMPLE_SHOP_ID) {
+    throw new Error("サンプル店舗のパスコードは変更できません。");
+  }
+
+  const newHashed = await hashPasscode(newPasscode);
+  const currentUser = getCurrentUser();
+
+  if (firebaseInitialized && db) {
+    const docRef = db.collection('shops').doc(cleanId);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      throw new Error("店舗が存在しません。");
+    }
+
+    const data = doc.data() || {};
+    const isOwner = currentUser && data.ownerUid && data.ownerUid === currentUser.uid;
+
+    if (!isOwner) {
+      if (!currentPasscode) {
+        throw new Error("現在のパスコードを入力するか、オーナーとしてログインしてください。");
+      }
+      const isValid = await verifyShopPasscode(cleanId, currentPasscode);
+      if (!isValid) {
+        throw new Error("現在のパスコードが一致しません。");
+      }
+    }
+
+    // /auth/secret を更新または作成
+    const secretRef = docRef.collection('auth').doc('secret');
+    await secretRef.set({ passcodeHash: newHashed });
+
+    // レガシー店舗用フィールドがあれば整理
+    if (data.passcode || data.passcodeHash) {
+      await docRef.update({
+        passcode: firebase.firestore.FieldValue.delete(),
+        passcodeHash: firebase.firestore.FieldValue.delete()
+      }).catch(() => {});
+    }
+
+    return true;
+  } else {
+    const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
+    if (cachedInfo) {
+      const parsed = JSON.parse(cachedInfo);
+      if (currentPasscode) {
+        const currentHashed = await hashPasscode(currentPasscode);
+        const isMatch = (parsed.passcodeHash && parsed.passcodeHash === currentHashed) ||
+                        (parsed.passcode && parsed.passcode === currentPasscode);
+        if (!isMatch) {
+          throw new Error("現在のパスコードが一致しません。");
+        }
+      }
+      parsed.passcodeHash = newHashed;
+      delete parsed.passcode;
+      localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify(parsed));
+    }
+    return true;
+  }
+}
+
+// 10. 既存店舗のオーナー権限引き継ぎ（Google連携）
+async function claimShopOwnership(shopId, passcode) {
+  initFirebase();
+  const cleanId = (shopId || '').toLowerCase().trim();
+  const currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    throw new Error("Googleアカウントでログインしてください。");
+  }
+
+  if (cleanId === SAMPLE_SHOP_ID) {
+    throw new Error("サンプル店舗はオーナー登録できません。");
+  }
+
+  const isValid = await verifyShopPasscode(cleanId, passcode);
+  if (!isValid) {
+    throw new Error("パスコードが一致しません。");
+  }
+
+  const hashedInput = await hashPasscode(passcode);
+
+  if (firebaseInitialized && db) {
+    const docRef = db.collection('shops').doc(cleanId);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      throw new Error("店舗が存在しません。");
+    }
+    const data = doc.data() || {};
+    if (data.ownerUid) {
+      throw new Error("この店舗には既にオーナーが登録されています。");
+    }
+
+    const batch = db.batch();
+    batch.update(docRef, {
+      ownerUid: currentUser.uid,
+      ownerEmail: currentUser.email || '',
+      ownerDisplayName: currentUser.displayName || '',
+      passcodeHash: hashedInput
+    });
+
+    const secretRef = docRef.collection('auth').doc('secret');
+    batch.set(secretRef, { passcodeHash: hashedInput }, { merge: true });
+    await batch.commit();
+    return true;
+  } else {
+    const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
+    if (cachedInfo) {
+      const parsed = JSON.parse(cachedInfo);
+      parsed.ownerUid = currentUser.uid;
+      parsed.ownerEmail = currentUser.email || '';
+      localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify(parsed));
+    }
+    return true;
   }
 }
 
@@ -892,6 +1126,13 @@ window.ShopManager = {
   createShop,
   updateShopPrices,
   verifyShopPasscode,
+  updateShopPasscode,
+  claimShopOwnership,
+  getShopInfo,
+  signInWithGoogle,
+  signOutUser,
+  getCurrentUser,
+  onAuthChange,
   getShopHistory,
   addShopToHistory,
   removeShopFromHistory,

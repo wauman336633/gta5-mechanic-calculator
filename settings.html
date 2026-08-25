@@ -27,6 +27,7 @@
   
   <!-- Firebase Compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
@@ -72,6 +73,7 @@
       <div class="modal-card">
         <h2 class="modal-title">🔐 管理者認証</h2>
         <p class="modal-desc">この店舗の価格変更を行うには管理用パスコードが必要です。</p>
+        
         <div id="samplePasscodeNotice" class="sample-passcode-notice" style="display: none;">
           <div class="notice-icon">💡</div>
           <div class="notice-body">
@@ -82,15 +84,36 @@
             </div>
           </div>
         </div>
+
+        <!-- Google Owner Direct Login -->
+        <div id="modalOwnerAuthBox" style="margin-bottom: 20px; padding: 14px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-md); text-align: center;">
+          <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
+            👑 店舗オーナーの方はこちら
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">
+            Googleアカウントでログインすると、パスコード入力なしで直接管理・パスコード再設定が可能です。
+          </p>
+          <button type="button" id="btnGoogleOwnerLogin" class="btn-secondary" style="width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 8px; font-weight: 700; background: #ffffff; color: #1f2937; border: 1px solid #d1d5db; padding: 8px 12px;">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+            オーナーとしてGoogleログイン
+          </button>
+        </div>
+
+        <div style="display: flex; align-items: center; margin: 16px 0; color: var(--text-secondary); font-size: 0.8rem;">
+          <hr style="flex: 1; border: none; border-top: 1px solid var(--border-color);">
+          <span style="padding: 0 10px;">または パスコードで認証</span>
+          <hr style="flex: 1; border: none; border-top: 1px solid var(--border-color);">
+        </div>
+
         <form id="formPasscode">
           <div class="form-group">
-            <label class="form-label" for="txtPasscode">パスコード</label>
+            <label class="form-label" for="txtPasscode">管理用パスコード</label>
             <input type="password" id="txtPasscode" class="form-input" placeholder="パスコードを入力" required autofocus>
           </div>
           <div id="passcodeError" style="color: #ef4444; font-weight: 700; font-size: 0.9rem; margin-bottom: 12px; display: none;"></div>
           <div class="form-actions">
             <a href="index.html" class="btn-secondary">戻る</a>
-            <button type="submit" class="btn-primary">認証する</button>
+            <button type="submit" id="btnSubmitPasscode" class="btn-primary">認証する</button>
           </div>
         </form>
       </div>
@@ -116,6 +139,7 @@
             <button type="button" class="settings-tab-btn active" data-tab="tabRepairs">🔧 修理・販売品</button>
             <button type="button" class="settings-tab-btn" data-tab="tabCustom">🎨 カスタムパーツ</button>
             <button type="button" class="settings-tab-btn" data-tab="tabBuyback">📦 素材買取</button>
+            <button type="button" class="settings-tab-btn" data-tab="tabSecurity">👑 オーナー・セキュリティ</button>
           </div>
 
           <!-- Tab Pane 1: 修理・販売品 -->
@@ -248,6 +272,64 @@
               </div>
               <div class="settings-items-list" id="list_buyback">
                 <!-- JSで動的レンダリング -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Pane 4: オーナー・セキュリティ管理 -->
+          <div id="tabSecurity" class="settings-tab-pane">
+            <!-- オーナー情報カード -->
+            <div class="settings-section-card">
+              <div class="settings-section-header">
+                <div class="settings-section-title">👑 店舗オーナー情報 (Google連携)</div>
+              </div>
+              <div style="padding: 16px; font-size: 0.9rem;">
+                <div id="secOwnerInfo" style="display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div>
+                      <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;" id="secOwnerStatus">確認中...</div>
+                      <div style="font-size: 0.8rem; color: var(--text-secondary);" id="secOwnerDetail">Googleログイン状態を確認しています</div>
+                    </div>
+                    <div id="secOwnerActions">
+                      <!-- Googleログイン・ログアウトボタン動的表示 -->
+                    </div>
+                  </div>
+                  <div id="secClaimBanner" style="display: none; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-sm); padding: 12px 16px;">
+                    <div style="font-weight: 700; font-size: 0.85rem; color: #60a5fa; margin-bottom: 4px;">💡 この店舗にはオーナーがまだ登録されていません</div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">現在のGoogleアカウントをこの店舗のオーナーとして登録することで、パスコード紛失時の復旧が可能になります。</p>
+                    <button type="button" id="btnClaimOwner" class="btn-primary" style="font-size: 0.85rem; padding: 8px 16px;">👑 現在のアカウントをオーナーとして登録</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- パスコード変更カード -->
+            <div class="settings-section-card" style="margin-top: 24px;">
+              <div class="settings-section-header">
+                <div class="settings-section-title">🔑 管理用パスコードの変更</div>
+              </div>
+              <div style="padding: 16px;">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+                  スタッフと共有する管理用パスコードを変更します。4文字〜32文字で設定してください。
+                </p>
+                <div id="changePasscodeForm" style="max-width: 480px; display: flex; flex-direction: column; gap: 14px;">
+                  <div class="form-group" id="groupCurrentPasscode">
+                    <label class="form-label" for="txtCurrentPasscode" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">現在のパスコード <small id="lblCurrentPasscodeReq">(スタッフ変更時は必須)</small></label>
+                    <input type="password" id="txtCurrentPasscode" class="form-input" placeholder="現在のパスコードを入力">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="txtNewPasscode" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">新しいパスコード <small>(4〜32文字)</small></label>
+                    <input type="password" id="txtNewPasscode" class="form-input" placeholder="新しいパスコードを入力">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="txtNewPasscodeConfirm" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">新しいパスコード (確認用)</label>
+                    <input type="password" id="txtNewPasscodeConfirm" class="form-input" placeholder="新しいパスコードを再入力">
+                  </div>
+                  <div id="changePasscodeMsg" style="font-weight: 700; font-size: 0.85rem; display: none;"></div>
+                  <div>
+                    <button type="button" id="btnChangePasscode" class="btn-primary" style="font-size: 0.9rem; padding: 10px 20px;">🔑 パスコードを更新する</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
