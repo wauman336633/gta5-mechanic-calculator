@@ -2,11 +2,12 @@ import { test, expect } from '@playwright/test';
 
 const pages = [
   { path: '/', titleExpected: /GTA5|メカニック|計算機/ },
-  { path: '/repair.html', titleExpected: /修理|Mechanic/ },
-  { path: '/custom.html', titleExpected: /カスタム|Mechanic/ },
-  { path: '/buyback.html', titleExpected: /買取|Mechanic/ },
+  { path: '/repair.html?shop=sample', titleExpected: /修理|Mechanic/ },
+  { path: '/custom.html?shop=sample', titleExpected: /カスタム|Mechanic/ },
+  { path: '/buyback.html?shop=sample', titleExpected: /買取|Mechanic/ },
   { path: '/register.html', titleExpected: /レジ|売上|Mechanic/ },
-  { path: '/settings.html', titleExpected: /設定|Mechanic/ }
+  { path: '/settings.html?shop=sample', titleExpected: /設定|Mechanic/ },
+  { path: '/not-found.html?shop=sample', titleExpected: /店舗が見つかりません|Mechanic/ }
 ];
 
 test.describe('Page Load and Console Error Check', () => {
@@ -45,9 +46,45 @@ test.describe('Page Load and Console Error Check', () => {
   }
 });
 
+test.describe('Shop Parameter and Not Found Guardrails', () => {
+  test('redirects to index.html when ?shop= parameter is missing on calculator page', async ({ page }) => {
+    await page.goto('/repair.html');
+    await page.waitForURL((url) => url.pathname.endsWith('index.html') || url.pathname === '/');
+    expect(page.url()).toMatch(/(index\.html|\/)$/);
+  });
+
+  test('redirects to not-found.html when an invalid shop id is specified in URL', async ({ page }) => {
+    await page.goto('/repair.html?shop=invalid_shop_9999');
+    await page.waitForURL((url) => url.pathname.includes('not-found.html'));
+    expect(page.url()).toContain('not-found.html?shop=invalid_shop_9999');
+    expect(page.url()).toContain('from=repair');
+    await expect(page.locator('#targetShopIdBadge')).toHaveText('invalid_shop_9999');
+  });
+
+  test('allows retrying shop ID on not-found.html and redirects to target page', async ({ page }) => {
+    await page.goto('/not-found.html?shop=wrong_id&from=custom');
+    const input = page.locator('#retryShopId');
+    await input.fill('sample');
+    const submitBtn = page.locator('#btnRetrySubmit');
+    await submitBtn.click();
+    await page.waitForURL((url) => url.pathname.includes('custom.html') && url.searchParams.get('shop') === 'sample');
+    expect(page.url()).toContain('custom.html?shop=sample');
+  });
+
+  test('portal direct ID input checks and redirects non-existent shop to not-found.html', async ({ page }) => {
+    await page.goto('/');
+    const input = page.locator('#directShopId');
+    await input.fill('non_existent_shop_123');
+    const form = page.locator('#formDirectAccess');
+    await form.locator('button[type="submit"]').click();
+    await page.waitForURL((url) => url.pathname.includes('not-found.html'));
+    expect(page.url()).toContain('not-found.html?shop=non_existent_shop_123');
+  });
+});
+
 test.describe('Repair Calculator E2E Interaction', () => {
   test('calculates repair costs correctly when selecting parts', async ({ page }) => {
-    await page.goto('/repair.html');
+    await page.goto('/repair.html?shop=sample');
 
     // 初期状態の合計表示を確認
     const totalEl = page.locator('#repairTotalDisplay');
@@ -80,7 +117,7 @@ test.describe('Repair Calculator E2E Interaction', () => {
 
 test.describe('Custom Calculator E2E Interaction', () => {
   test('calculates custom costs when selecting options', async ({ page }) => {
-    await page.goto('/custom.html');
+    await page.goto('/custom.html?shop=sample');
 
     const totalEl = page.locator('#customTotalDisplay, #totalDisplay, .total-amount').first();
     await expect(totalEl).toBeVisible();
@@ -97,7 +134,7 @@ test.describe('Custom Calculator E2E Interaction', () => {
 
 test.describe('Buyback Calculator E2E Interaction', () => {
   test('calculates buyback total when typing quantities', async ({ page }) => {
-    await page.goto('/buyback.html');
+    await page.goto('/buyback.html?shop=sample');
 
     const totalEl = page.locator('#buybackTotalDisplay, #totalDisplay, .total-amount').first();
     await expect(totalEl).toBeVisible();
@@ -115,7 +152,7 @@ test.describe('Buyback Calculator E2E Interaction', () => {
 
 test.describe('Settings Dynamic Configuration E2E Interaction', () => {
   test('authenticates and displays dynamic item editor', async ({ page }) => {
-    await page.goto('/settings.html');
+    await page.goto('/settings.html?shop=sample');
 
     // パスコードモーダル
     const modal = page.locator('#modalPasscode');

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店舗が見つかりません | MECHANIC CALCULATOR</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    .not-found-container {
+      max-width: 620px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+    .not-found-card {
+      background: var(--card-bg, #1e293b);
+      border: 1px solid var(--border-color, #334155);
+      border-radius: var(--radius-lg, 16px);
+      padding: 40px 32px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+    }
+    .not-found-icon {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .not-found-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-primary, #f8fafc);
+      margin-bottom: 12px;
+    }
+    .not-found-desc {
+      color: var(--text-secondary, #94a3b8);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .not-found-shop-badge {
+      display: inline-block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .retry-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color, #334155);
+      border-radius: var(--radius-md, 10px);
+      padding: 20px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .retry-box-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary, #94a3b8);
+      margin-bottom: 8px;
+    }
+    .retry-form {
+      display: flex;
+      gap: 8px;
+    }
+    .retry-input {
+      flex: 1;
+    }
+    .retry-error-msg {
+      margin-top: 8px;
+      font-size: 0.82rem;
+      color: #f87171;
+      display: none;
+    }
+    .not-found-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-portal-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color, #334155);
+      color: var(--text-primary, #f8fafc);
+      border-radius: var(--radius-md, 8px);
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .btn-portal-back:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--text-secondary, #94a3b8);
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="portal-body">
+  <!-- Portal Header -->
+  <header class="portal-header">
+    <div class="portal-header-container">
+      <div class="portal-brand">
+        <a href="index.html" class="portal-logo" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px;">
+          <span class="portal-logo-icon">🔧</span>
+          <span class="portal-logo-text">MECHANIC CALCULATOR</span>
+        </a>
+      </div>
+      <div class="portal-header-actions">
+        <a href="index.html" class="btn-secondary btn-header-action">
+          🏠 ポータルトップ
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="not-found-container">
+    <div class="not-found-card">
+      <div class="not-found-icon">🔍</div>
+      <h1 class="not-found-title">店舗が見つかりませんでした</h1>
+      <p class="not-found-desc">
+        指定された店舗ID <span id="targetShopIdBadge" class="not-found-shop-badge">-</span> は登録されていないか、削除された可能性があります。<br>
+        スペルをご確認の上、再度お試しください。
+      </p>
+
+      <!-- 店舗ID打ち直しフォーム -->
+      <div class="retry-box">
+        <label for="retryShopId" class="retry-box-label">🔑 店舗IDを修正して開く</label>
+        <form id="formRetryAccess" class="retry-form">
+          <input type="text" id="retryShopId" class="form-input retry-input" placeholder="店舗IDを入力" pattern="[a-zA-Z0-9_-]+" required>
+          <button type="submit" id="btnRetrySubmit" class="btn-primary" style="white-space: nowrap;">計算機を開く ➔</button>
+        </form>
+        <div id="retryErrorMsg" class="retry-error-msg">❌ 店舗が見つかりませんでした。別のIDをお試しください。</div>
+      </div>
+
+      <!-- アクションボタン -->
+      <div class="not-found-actions">
+        <a href="index.html" class="btn-portal-back">
+          🏠 ポータル画面へ戻る
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script src="common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const rawShopId = (urlParams.get('shop') || '').trim();
+      const safeTargetId = rawShopId ? (window.AppCommon ? window.AppCommon.escapeHtml(rawShopId) : rawShopId) : '未指定';
+      
+      const targetShopIdBadge = document.getElementById('targetShopIdBadge');
+      const retryShopId = document.getElementById('retryShopId');
+      const formRetryAccess = document.getElementById('formRetryAccess');
+      const btnRetrySubmit = document.getElementById('btnRetrySubmit');
+      const retryErrorMsg = document.getElementById('retryErrorMsg');
+
+      if (targetShopIdBadge) {
+        targetShopIdBadge.textContent = safeTargetId;
+      }
+      if (retryShopId && rawShopId) {
+        retryShopId.value = rawShopId;
+      }
+
+      // 履歴から無効な店舗を自動削除
+      if (rawShopId && window.ShopManager && window.ShopManager.removeShopFromHistory) {
+        window.ShopManager.removeShopFromHistory(rawShopId.toLowerCase());
+      }
+
+      // 復帰先のページ種別を判定（安全なホワイトリストチェック）
+      const fromPage = window.AppCommon && window.AppCommon.getSafeFromPage ? window.AppCommon.getSafeFromPage('repair') : 'repair';
+      const targetHtml = `${fromPage}.html`;
+
+      if (formRetryAccess) {
+        formRetryAccess.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          retryErrorMsg.style.display = 'none';
+          const newTargetId = retryShopId.value.trim().toLowerCase();
+          if (!newTargetId) return;
+
+          const originalText = btnRetrySubmit.textContent;
+          try {
+            btnRetrySubmit.disabled = true;
+            btnRetrySubmit.textContent = '確認中...';
+
+            let exists = false;
+            if (window.ShopManager && window.ShopManager.checkShopExists) {
+              exists = await window.ShopManager.checkShopExists(newTargetId);
+            } else if (window.ShopManager && window.ShopManager.getShopInfo) {
+              const info = await window.ShopManager.getShopInfo(newTargetId);
+              exists = info !== null;
+            } else {
+              exists = newTargetId === 'sample';
+            }
+
+            if (exists) {
+              window.location.href = `${targetHtml}?shop=${encodeURIComponent(newTargetId)}`;
+            } else {
+              if (targetShopIdBadge) {
+                targetShopIdBadge.textContent = newTargetId;
+              }
+              retryErrorMsg.style.display = 'block';
+            }
+          } catch (err) {
+            console.error("Retry check error:", err);
+            retryErrorMsg.style.display = 'block';
+          } finally {
+            btnRetrySubmit.disabled = false;
+            btnRetrySubmit.textContent = originalText;
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

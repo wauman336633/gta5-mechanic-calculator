@@ -151,6 +151,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 店舗データの購読
   window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
+    if (shopInfo && shopInfo.notFound) {
+      if (window.AppCommon && window.AppCommon.redirectToNotFound) {
+        window.AppCommon.redirectToNotFound(shopId, 'settings');
+      } else {
+        window.location.replace(`not-found.html?shop=${encodeURIComponent(shopId)}&from=settings`);
+      }
+      return;
+    }
     currentShopName.textContent = shopInfo.name;
     if (shopInfo.customConfig) {
       currentConfig = JSON.parse(JSON.stringify(shopInfo.customConfig));

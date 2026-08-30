@@ -37,6 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (window.ShopManager) {
     window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
+      if (shopInfo && shopInfo.notFound) {
+        if (window.AppCommon && window.AppCommon.redirectToNotFound) {
+          window.AppCommon.redirectToNotFound(shopId, 'repair');
+        } else {
+          window.location.replace(`not-found.html?shop=${encodeURIComponent(shopId)}&from=repair`);
+        }
+        return;
+      }
       if (currentShopNameEl) currentShopNameEl.textContent = shopInfo.name;
       if (shopInfo.customConfig) {
         currentConfig = shopInfo.customConfig;
