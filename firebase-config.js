@@ -448,9 +448,11 @@ function subscribeShopPrices(shopId, callback) {
   // Firebase未設定またはオフライン時のフォールバック
   if (!firebaseInitialized || !db) {
     const localData = localStorage.getItem(`shop_prices_${cleanId}`);
+    const localInfo = localStorage.getItem(`shop_info_${cleanId}`);
     let prices = JSON.parse(JSON.stringify(DEFAULT_PRICES));
     let customConfig = JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG));
     let shopName = cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase();
+    const isNotFound = cleanId !== SAMPLE_SHOP_ID && !localData && !localInfo;
 
     if (localData) {
       try {
@@ -487,7 +489,8 @@ function subscribeShopPrices(shopId, callback) {
       id: cleanId,
       name: shopName,
       prices,
-      customConfig
+      customConfig,
+      notFound: isNotFound
     };
     callback(shopInfo);
     return () => {};
@@ -499,7 +502,8 @@ function subscribeShopPrices(shopId, callback) {
       id: cleanId,
       name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
       prices: JSON.parse(JSON.stringify(DEFAULT_PRICES)),
-      customConfig: JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG))
+      customConfig: JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG)),
+      notFound: false
     };
 
     if (doc.exists) {
@@ -533,10 +537,14 @@ function subscribeShopPrices(shopId, callback) {
       const normalized = normalizeShopConfig(data);
       shopInfo.prices = normalized.prices;
       shopInfo.customConfig = normalized.customConfig;
+      // キャッシュ保存
+      localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify(shopInfo));
+    } else {
+      if (cleanId !== SAMPLE_SHOP_ID) {
+        shopInfo.notFound = true;
+      }
     }
     
-    // キャッシュ保存
-    localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify(shopInfo));
     callback(shopInfo);
   }, error => {
     console.warn("Firestore access error, fallback to default", error);
@@ -544,7 +552,8 @@ function subscribeShopPrices(shopId, callback) {
       id: cleanId,
       name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
       prices: JSON.parse(JSON.stringify(DEFAULT_PRICES)),
-      customConfig: JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG))
+      customConfig: JSON.parse(JSON.stringify(DEFAULT_CUSTOM_CONFIG)),
+      notFound: false
     });
   });
 
@@ -589,33 +598,49 @@ function onAuthChange(callback) {
 async function getShopInfo(shopId) {
   initFirebase();
   const cleanId = (shopId || '').toLowerCase().trim();
+  if (!cleanId) return null;
   if (cleanId === SAMPLE_SHOP_ID) {
     return { id: SAMPLE_SHOP_ID, name: 'サンプル店舗', ownerUid: null };
   }
 
   if (firebaseInitialized && db) {
-    const docRef = db.collection('shops').doc(cleanId);
-    const doc = await docRef.get();
-    if (!doc.exists) {
+    try {
+      const docRef = db.collection('shops').doc(cleanId);
+      const doc = await docRef.get();
+      if (!doc.exists) {
+        return null;
+      }
+      const data = doc.data();
+      return {
+        id: cleanId,
+        name: data.name || cleanId,
+        ownerUid: data.ownerUid || null,
+        ownerEmail: data.ownerEmail || null,
+        ownerDisplayName: data.ownerDisplayName || null,
+        createdAt: data.createdAt || null,
+        updatedAt: data.updatedAt || null
+      };
+    } catch (e) {
+      console.warn("Firestore getShopInfo error, fallback to local", e);
+      const cached = localStorage.getItem(`shop_info_${cleanId}`) || localStorage.getItem(`shop_prices_${cleanId}`);
+      if (cached) {
+        return JSON.parse(cached);
+      }
       return null;
     }
-    const data = doc.data();
-    return {
-      id: cleanId,
-      name: data.name || cleanId,
-      ownerUid: data.ownerUid || null,
-      ownerEmail: data.ownerEmail || null,
-      ownerDisplayName: data.ownerDisplayName || null,
-      createdAt: data.createdAt || null,
-      updatedAt: data.updatedAt || null
-    };
   } else {
-    const cached = localStorage.getItem(`shop_info_${cleanId}`);
+    const cached = localStorage.getItem(`shop_info_${cleanId}`) || localStorage.getItem(`shop_prices_${cleanId}`);
     if (cached) {
       return JSON.parse(cached);
     }
     return null;
   }
+}
+
+// 5.1 店舗存在チェック
+async function checkShopExists(shopId) {
+  const info = await getShopInfo(shopId);
+  return info !== null;
 }
 
 // 6. 店舗の新規作成
@@ -1117,7 +1142,7 @@ window.ShopManager = {
   setShopId,
   subscribeShopPrices: function(shopId, callback) {
     return subscribeShopPrices(shopId, (shopInfo) => {
-      if (shopInfo && shopInfo.id) {
+      if (shopInfo && shopInfo.id && !shopInfo.notFound) {
         addShopToHistory(shopInfo.id, shopInfo.name);
       }
       callback(shopInfo);
@@ -1129,6 +1154,7 @@ window.ShopManager = {
   updateShopPasscode,
   claimShopOwnership,
   getShopInfo,
+  checkShopExists,
   signInWithGoogle,
   signOutUser,
   getCurrentUser,

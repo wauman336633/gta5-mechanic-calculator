@@ -9,10 +9,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '../..');
 
-function loadCommonModule() {
+function loadCommonModule(locationSearch = '') {
   const code = fs.readFileSync(path.join(rootDir, 'common.js'), 'utf-8');
   const context = {
-    window: {},
+    window: {
+      location: {
+        pathname: '/repair.html',
+        search: locationSearch,
+        origin: 'http://localhost:3000'
+      }
+    },
     document: {
       getElementById: () => null,
       addEventListener: () => {},
@@ -20,6 +26,8 @@ function loadCommonModule() {
       querySelectorAll: () => [],
     },
     navigator: {},
+    URL: globalThis.URL,
+    URLSearchParams: globalThis.URLSearchParams,
     setTimeout: setTimeout,
     clearTimeout: clearTimeout,
     console: console,
@@ -53,3 +61,15 @@ test('AppCommon.escapeHtml sanitizes special characters', () => {
   assert.equal(AppCommon.escapeHtml("Tom & Jerry's"), 'Tom &amp; Jerry&#039;s');
   assert.equal(AppCommon.escapeHtml(null), '');
 });
+
+test('AppCommon.getSafeFromPage sanitizes page redirect whitelist', () => {
+  const AppCommon = loadCommonModule('?from=custom');
+  assert.equal(AppCommon.getSafeFromPage('repair'), 'custom');
+  assert.equal(AppCommon.getSafeFromPage('repair', '?from=buyback'), 'buyback');
+  assert.equal(AppCommon.getSafeFromPage('repair', '?from=settings'), 'settings');
+  // 外部URLやホワイトリスト外の入力に対するサニタイズ（オープンリダイレクト防止）
+  assert.equal(AppCommon.getSafeFromPage('repair', '?from=https://evil.com'), 'repair');
+  assert.equal(AppCommon.getSafeFromPage('repair', '?from=unknown_page'), 'repair');
+});
+
+

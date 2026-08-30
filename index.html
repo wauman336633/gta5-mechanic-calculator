@@ -205,11 +205,43 @@
 
       // 直接アクセスフォームの処理
       if (formDirectAccess) {
-        formDirectAccess.addEventListener('submit', (e) => {
+        formDirectAccess.addEventListener('submit', async (e) => {
           e.preventDefault();
           const targetId = directShopId.value.trim().toLowerCase();
-          if (targetId) {
-            window.location.href = `repair.html?shop=${encodeURIComponent(targetId)}`;
+          if (!targetId) return;
+
+          const submitBtn = formDirectAccess.querySelector('button[type="submit"]');
+          const originalText = submitBtn ? submitBtn.textContent : '';
+
+          try {
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.textContent = '確認中...';
+            }
+
+            let exists = false;
+            if (window.ShopManager && window.ShopManager.checkShopExists) {
+              exists = await window.ShopManager.checkShopExists(targetId);
+            } else if (window.ShopManager && window.ShopManager.getShopInfo) {
+              const info = await window.ShopManager.getShopInfo(targetId);
+              exists = info !== null;
+            } else {
+              exists = targetId === 'sample';
+            }
+
+            if (exists) {
+              window.location.href = `repair.html?shop=${encodeURIComponent(targetId)}`;
+            } else {
+              window.location.href = `not-found.html?shop=${encodeURIComponent(targetId)}&from=repair`;
+            }
+          } catch (err) {
+            console.error("Shop check error:", err);
+            window.location.href = `not-found.html?shop=${encodeURIComponent(targetId)}&from=repair`;
+          } finally {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = originalText;
+            }
           }
         });
       }

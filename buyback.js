@@ -59,6 +59,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (window.ShopManager) {
     window.ShopManager.subscribeShopPrices(shopId, (shopInfo) => {
+      if (shopInfo && shopInfo.notFound) {
+        if (window.AppCommon && window.AppCommon.redirectToNotFound) {
+          window.AppCommon.redirectToNotFound(shopId, 'buyback');
+        } else {
+          window.location.replace(`not-found.html?shop=${encodeURIComponent(shopId)}&from=buyback`);
+        }
+        return;
+      }
       if (currentShopNameEl) currentShopNameEl.textContent = shopInfo.name;
       
       const config = shopInfo.customConfig || window.ShopManager.DEFAULT_CUSTOM_CONFIG;

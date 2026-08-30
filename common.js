@@ -74,12 +74,57 @@ const AppCommon = {
     }
   },
 
-  // 4. URLパラメータの維持・リンク自動同期
+  // 4. 店舗パラメータ必須判定 & ポータルへのリダイレクト
+  validateAndRedirectShopParam() {
+    const path = window.location.pathname.toLowerCase();
+    const isRequiredPage = path.endsWith('repair.html') ||
+                           path.endsWith('custom.html') ||
+                           path.endsWith('buyback.html') ||
+                           path.endsWith('settings.html');
+
+    if (isRequiredPage) {
+      const currentParams = new URLSearchParams(window.location.search);
+      const shopParam = currentParams.get('shop');
+      if (!shopParam || !shopParam.trim()) {
+        window.location.replace('index.html');
+        return false;
+      }
+    }
+    return true;
+  },
+
+  // 4-1. 安全な復帰先ページの取得（オープンリダイレクト防止）
+  getSafeFromPage(defaultPage = 'repair', queryString = null) {
+    const search = queryString != null ? queryString : (typeof window !== 'undefined' && window.location ? window.location.search : '');
+    const params = typeof URLSearchParams !== 'undefined' ? new URLSearchParams(search) : new Map();
+    const from = (params.get ? (params.get('from') || '') : '').toLowerCase().trim();
+    const allowedPages = ['repair', 'custom', 'buyback', 'settings'];
+    return allowedPages.includes(from) ? from : defaultPage;
+  },
+
+  // 4-2. 店舗未検出専用ページへのリダイレクト
+  redirectToNotFound(shopId, fromPage) {
+    const targetShop = encodeURIComponent((shopId || '').toLowerCase().trim());
+    const safeFrom = encodeURIComponent(fromPage || this.getCurrentPageType());
+    window.location.replace(`not-found.html?shop=${targetShop}&from=${safeFrom}`);
+  },
+
+  // 現在のページ種別を取得 (repair | custom | buyback | settings | index)
+  getCurrentPageType() {
+    const path = window.location.pathname.toLowerCase();
+    if (path.endsWith('repair.html')) return 'repair';
+    if (path.endsWith('custom.html')) return 'custom';
+    if (path.endsWith('buyback.html')) return 'buyback';
+    if (path.endsWith('settings.html')) return 'settings';
+    return 'repair';
+  },
+
+  // 4-3. URLパラメータの維持・リンク自動同期
   syncNavigationShopParams(shopId) {
-    const isPortal = window.location.pathname === '/' ||
-                     window.location.pathname.endsWith('/index.html') ||
-                     window.location.pathname.endsWith('index.html') ||
-                     document.body.classList.contains('portal-body');
+    const path = window.location.pathname.toLowerCase();
+    const isPortal = path === '/' ||
+                     path.endsWith('/index.html') ||
+                     path.endsWith('index.html');
 
     // ポータル画面の場合：URLにshopパラメータを追加せず、付与されている場合は削除してクリーンなURLに統一
     if (isPortal) {
@@ -105,13 +150,6 @@ const AppCommon = {
         }
       }
     });
-
-    const currentParams = new URLSearchParams(window.location.search);
-    if (!currentParams.get('shop') && shopId && window.history && window.history.replaceState) {
-      currentParams.set('shop', shopId);
-      const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
-      window.history.replaceState(null, '', newUrl);
-    }
   },
 
   // 5. 店舗共有URLのコピー機能
@@ -356,10 +394,14 @@ const AppCommon = {
 
   // 8. 共通UI初期化
   initCommonUI() {
+    if (!this.validateAndRedirectShopParam()) {
+      return;
+    }
+
     this.initHamburgerMenu();
     this.initFeedbackModal();
 
-    const shopId = window.ShopManager ? window.ShopManager.getShopId() : 'sample';
+    const shopId = window.ShopManager ? window.ShopManager.getShopId() : '';
     this.syncNavigationShopParams(shopId);
     this.initShopShareAction(shopId);
 
