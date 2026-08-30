@@ -20,7 +20,9 @@ test('Buyback material calculation accuracy', () => {
   vm.createContext(context);
   try {
     vm.runInContext(code + '\n;globalThis.DEFAULT_PRICES = DEFAULT_PRICES;', context);
-  } catch (e) {}
+  } catch (_e) {
+    // VM実行時の未定義ブラウザ変数を無視
+  }
 
   const prices = context.DEFAULT_PRICES || context.globalThis?.DEFAULT_PRICES;
   assert.ok(prices);
@@ -46,7 +48,9 @@ test('Repair cost calculation rules (Full vs Body + Engine)', () => {
   vm.createContext(context);
   try {
     vm.runInContext(code + '\n;globalThis.DEFAULT_PRICES = DEFAULT_PRICES;', context);
-  } catch (e) {}
+  } catch (_e) {
+    // VM実行時の未定義ブラウザ変数を無視
+  }
 
   const prices = context.DEFAULT_PRICES || context.globalThis?.DEFAULT_PRICES;
   

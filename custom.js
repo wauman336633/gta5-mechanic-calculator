@@ -92,23 +92,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentPrice = prices[currentLevel] || 0;
 
         const group = document.createElement('div');
-        group.className = 'level-select-group';
-        group.dataset.key = item.id;
+        const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+        const safeName = escape(item.name);
+        const safeId = escape(item.id);
 
         let buttonsHtml = '';
         for (let lvl = 1; lvl < prices.length; lvl++) {
           const p = prices[lvl];
           const isActive = currentLevel === lvl ? 'active' : '';
-          const label = (item.labels && item.labels[lvl]) ? item.labels[lvl] : `Lv${lvl}`;
+          const rawLabel = (item.labels && item.labels[lvl]) ? item.labels[lvl] : `Lv${lvl}`;
+          const label = escape(rawLabel);
           buttonsHtml += `<button class="lvl-btn ${isActive}" data-level="${lvl}" data-price="${p}">${label} <small>${formatShortPrice(p)}</small></button>`;
         }
 
+        // eslint-disable-next-line no-unsanitized/property
         group.innerHTML = `
           <div class="level-header">
-            <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
-            <span class="level-selected-price" id="price_perf_${item.id}">${currentLevel > 0 ? formatJPY(currentPrice) : '未選択'}</span>
+            <span class="item-name">${safeName}</span>
+            <span class="level-selected-price" id="price_perf_${safeId}">${currentLevel > 0 ? formatJPY(currentPrice) : '未選択'}</span>
           </div>
-          <div class="level-buttons" id="lvl_${item.id}">
+          <div class="level-buttons" id="lvl_${safeId}">
             ${buttonsHtml}
           </div>
         `;
@@ -135,13 +138,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       } else if (item.type === 'checkbox') {
         const checked = !!state.performance[item.id];
+        const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+        const safeName = escape(item.name);
+        const safeId = escape(item.id);
+
         const row = document.createElement('div');
         row.className = 'item-row toggle-item';
+        // eslint-disable-next-line no-unsanitized/property
         row.innerHTML = `
-          <label class="toggle-card" for="chk_perf_${item.id}">
-            <input type="checkbox" id="chk_perf_${item.id}" ${checked ? 'checked' : ''}>
+          <label class="toggle-card" for="chk_perf_${safeId}">
+            <input type="checkbox" id="chk_perf_${safeId}" ${checked ? 'checked' : ''}>
             <div class="toggle-content">
-              <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+              <span class="item-name">${safeName}</span>
               <span class="item-price">${formatJPY(item.price)}</span>
             </div>
           </label>
@@ -171,17 +179,22 @@ document.addEventListener('DOMContentLoaded', () => {
     list.forEach(item => {
       if (item.type === 'stepper') {
         const qty = Number(state.exterior[item.id] || 0);
+        const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+        const safeName = escape(item.name);
+        const safeId = escape(item.id);
+
         const row = document.createElement('div');
         row.className = 'item-row counter-item';
+        // eslint-disable-next-line no-unsanitized/property
         row.innerHTML = `
           <div class="counter-info">
-            <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+            <span class="item-name">${safeName}</span>
             <span class="item-unit-price">${formatJPY(item.price)}</span>
           </div>
           <div class="counter-controls">
-            <button class="cnt-btn dec" data-target="cnt_ext_${item.id}">-</button>
-            <input type="number" id="cnt_ext_${item.id}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
-            <button class="cnt-btn inc" data-target="cnt_ext_${item.id}">+</button>
+            <button class="cnt-btn dec" data-target="cnt_ext_${safeId}">-</button>
+            <input type="number" id="cnt_ext_${safeId}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
+            <button class="cnt-btn inc" data-target="cnt_ext_${safeId}">+</button>
           </div>
         `;
         customExteriorContainer.appendChild(row);
@@ -213,13 +226,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       } else if (item.type === 'checkbox') {
         const checked = !!state.exterior[item.id];
+        const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+        const safeName = escape(item.name);
+        const safeId = escape(item.id);
+
         const row = document.createElement('div');
         row.className = 'item-row toggle-item';
+        // eslint-disable-next-line no-unsanitized/property
         row.innerHTML = `
-          <label class="toggle-card" for="chk_ext_${item.id}">
-            <input type="checkbox" id="chk_ext_${item.id}" ${checked ? 'checked' : ''}>
+          <label class="toggle-card" for="chk_ext_${safeId}">
+            <input type="checkbox" id="chk_ext_${safeId}" ${checked ? 'checked' : ''}>
             <div class="toggle-content">
-              <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+              <span class="item-name">${safeName}</span>
               <span class="item-price">${formatJPY(item.price)}</span>
             </div>
           </label>
@@ -248,17 +266,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     list.forEach(item => {
       const qty = Number(state.repairs[item.id] || 0);
+      const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+      const safeName = escape(item.name);
+      const safeId = escape(item.id);
+
       const row = document.createElement('div');
       row.className = 'item-row counter-item';
+      // eslint-disable-next-line no-unsanitized/property
       row.innerHTML = `
         <div class="counter-info">
-          <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+          <span class="item-name">${safeName}</span>
           <span class="item-unit-price">${formatJPY(item.price)}</span>
         </div>
         <div class="counter-controls">
-          <button class="cnt-btn dec" data-target="cnt_cust_rep_${item.id}">-</button>
-          <input type="number" id="cnt_cust_rep_${item.id}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
-          <button class="cnt-btn inc" data-target="cnt_cust_rep_${item.id}">+</button>
+          <button class="cnt-btn dec" data-target="cnt_cust_rep_${safeId}">-</button>
+          <input type="number" id="cnt_cust_rep_${safeId}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
+          <button class="cnt-btn inc" data-target="cnt_cust_rep_${safeId}">+</button>
         </div>
       `;
       customRepairsContainer.appendChild(row);
@@ -304,17 +327,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     list.forEach(item => {
       const qty = Number(state.items[item.id] || 0);
+      const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+      const safeName = escape(item.name);
+      const safeId = escape(item.id);
+
       const row = document.createElement('div');
       row.className = 'item-row counter-item';
+      // eslint-disable-next-line no-unsanitized/property
       row.innerHTML = `
         <div class="counter-info">
-          <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+          <span class="item-name">${safeName}</span>
           <span class="item-unit-price">${formatJPY(item.price)}</span>
         </div>
         <div class="counter-controls">
-          <button class="cnt-btn dec" data-target="cnt_cust_item_${item.id}">-</button>
-          <input type="number" id="cnt_cust_item_${item.id}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
-          <button class="cnt-btn inc" data-target="cnt_cust_item_${item.id}">+</button>
+          <button class="cnt-btn dec" data-target="cnt_cust_item_${safeId}">-</button>
+          <input type="number" id="cnt_cust_item_${safeId}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
+          <button class="cnt-btn inc" data-target="cnt_cust_item_${safeId}">+</button>
         </div>
       `;
       customItemsContainer.appendChild(row);

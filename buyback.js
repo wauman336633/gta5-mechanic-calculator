@@ -87,29 +87,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     customMaterials.forEach(item => {
-      const icon = getIconForMaterial(item);
-      const unit = item.unit || '個';
+      const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+      const icon = escape(getIconForMaterial(item));
+      const unit = escape(item.unit || '個');
+      const safeName = escape(item.name);
+      const safeId = escape(item.id);
       const qty = state[item.id] || 0;
       const subtotal = qty * Number(item.price || 0);
 
       const card = document.createElement('div');
       card.className = 'material-card';
       card.dataset.id = item.id;
+      // eslint-disable-next-line no-unsanitized/property
       card.innerHTML = `
         <div class="material-icon">${icon}</div>
         <div class="material-info">
-          <span class="material-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+          <span class="material-name">${safeName}</span>
           <span class="material-unit-price">${formatJPY(item.price)} / ${unit}</span>
         </div>
         <div class="counter-controls">
-          <button class="cnt-btn dec" data-target="cnt_${item.id}">-</button>
-          <input type="number" id="cnt_${item.id}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99999}" class="cnt-input buyback-input">
-          <button class="cnt-btn inc" data-target="cnt_${item.id}">+</button>
+          <button class="cnt-btn dec" data-target="cnt_${safeId}">-</button>
+          <input type="number" id="cnt_${safeId}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99999}" class="cnt-input buyback-input">
+          <button class="cnt-btn inc" data-target="cnt_${safeId}">+</button>
         </div>
-        <button class="btn-copy-qty" data-target="cnt_${item.id}" data-name="${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}" title="${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}の個数のみコピー">
+        <button class="btn-copy-qty" data-target="cnt_${safeId}" data-name="${safeName}" title="${safeName}の個数のみコピー">
           <span class="btn-icon">📋</span>
         </button>
-        <div class="material-subtotal" id="subtotal_${item.id}">${formatJPY(subtotal)}</div>
+        <div class="material-subtotal" id="subtotal_${safeId}">${formatJPY(subtotal)}</div>
       `;
 
       buybackGrid.appendChild(card);

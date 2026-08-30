@@ -69,7 +69,7 @@ const AppCommon = {
       document.execCommand('copy');
       document.body.removeChild(textArea);
       this.showToast(successMsg);
-    } catch (e) {
+    } catch (_e) {
       alert("コピーに失敗しました: " + text);
     }
   },
@@ -235,6 +235,8 @@ const AppCommon = {
           </div>
         </div>
       `;
+      // 静的テンプレートHTMLの挿入
+      // eslint-disable-next-line no-unsanitized/method
       document.body.insertAdjacentHTML('beforeend', modalHtml);
       modal = document.getElementById('modalFeedback');
     }

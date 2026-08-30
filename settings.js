@@ -394,34 +394,40 @@ document.addEventListener('DOMContentLoaded', () => {
       row.className = 'settings-item-row';
       row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px; flex-wrap: wrap;';
 
+      const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+      const safeName = escape(item.name);
+      const safeTypeLabel = escape(getTypeLabel(item.type));
+      const safeUnit = item.unit ? ` (${escape(item.unit)})` : '';
+      const safeSection = escape(sectionPath);
+
       // 左側: 並び替えボタン ＋ 名称入力
-      let leftHtml = `
+      const leftHtml = `
         <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px;">
           <div style="display: flex; flex-direction: column; gap: 2px;">
-            <button type="button" class="btn-move-up" data-section="${sectionPath}" data-index="${index}" style="background: none; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); cursor: pointer; padding: 2px 6px; font-size: 0.75rem;" ${index === 0 ? 'disabled style="opacity: 0.3;"' : ''}>▲</button>
-            <button type="button" class="btn-move-down" data-section="${sectionPath}" data-index="${index}" style="background: none; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); cursor: pointer; padding: 2px 6px; font-size: 0.75rem;" ${index === list.length - 1 ? 'disabled style="opacity: 0.3;"' : ''}>▼</button>
+            <button type="button" class="btn-move-up" data-section="${safeSection}" data-index="${index}" style="background: none; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); cursor: pointer; padding: 2px 6px; font-size: 0.75rem;" ${index === 0 ? 'disabled style="opacity: 0.3;"' : ''}>▲</button>
+            <button type="button" class="btn-move-down" data-section="${safeSection}" data-index="${index}" style="background: none; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); cursor: pointer; padding: 2px 6px; font-size: 0.75rem;" ${index === list.length - 1 ? 'disabled style="opacity: 0.3;"' : ''}>▼</button>
           </div>
           <div style="flex: 1;">
-            <input type="text" class="form-input item-name-input" data-section="${sectionPath}" data-index="${index}" value="${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}" placeholder="項目名" style="width: 100%; font-weight: 600; padding: 8px 10px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
+            <input type="text" class="form-input item-name-input" data-section="${safeSection}" data-index="${index}" value="${safeName}" placeholder="項目名" style="width: 100%; font-weight: 600; padding: 8px 10px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;">
             <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">
-              タイプ: <strong>${getTypeLabel(item.type)}</strong>${item.unit ? ` (${item.unit})` : ''}
+              タイプ: <strong>${safeTypeLabel}</strong>${safeUnit}
             </div>
           </div>
         </div>
       `;
 
       // 中央: 価格入力欄
-      let priceHtml = '';
+      let priceHtml;
       if (item.type === 'dual_mode') {
         priceHtml = `
           <div style="display: flex; gap: 8px; align-items: center;">
             <div>
               <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">店内 (円)</span>
-              <input type="number" class="form-input item-shop-price-input" data-section="${sectionPath}" data-index="${index}" value="${item.shopPrice != null ? item.shopPrice : 0}" style="width: 110px; padding: 8px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" min="0">
+              <input type="number" class="form-input item-shop-price-input" data-section="${safeSection}" data-index="${index}" value="${item.shopPrice != null ? item.shopPrice : 0}" style="width: 110px; padding: 8px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" min="0">
             </div>
             <div>
               <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">出張 (円)</span>
-              <input type="number" class="form-input item-onsite-price-input" data-section="${sectionPath}" data-index="${index}" value="${item.onsitePrice != null ? item.onsitePrice : 0}" style="width: 110px; padding: 8px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" min="0">
+              <input type="number" class="form-input item-onsite-price-input" data-section="${safeSection}" data-index="${index}" value="${item.onsitePrice != null ? item.onsitePrice : 0}" style="width: 110px; padding: 8px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" min="0">
             </div>
           </div>
         `;
@@ -432,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
           tierInputs += `
             <div style="display: flex; flex-direction: column;">
               <span style="font-size: 0.7rem; color: var(--text-secondary);">Lv${lvl}</span>
-              <input type="number" class="form-input item-tier-price-input" data-section="${sectionPath}" data-index="${index}" data-level="${lvl}" value="${prices[lvl]}" style="width: 90px; padding: 6px; font-size: 0.85rem; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px;" min="0">
+              <input type="number" class="form-input item-tier-price-input" data-section="${safeSection}" data-index="${index}" data-level="${lvl}" value="${prices[lvl]}" style="width: 90px; padding: 6px; font-size: 0.85rem; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 4px;" min="0">
             </div>
           `;
         }
@@ -442,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         priceHtml = `
           <div>
             <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">単価 (円)</span>
-            <input type="number" class="form-input item-single-price-input" data-section="${sectionPath}" data-index="${index}" value="${item.price != null ? item.price : 0}" style="width: 120px; padding: 8px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" min="0">
+            <input type="number" class="form-input item-single-price-input" data-section="${safeSection}" data-index="${index}" value="${item.price != null ? item.price : 0}" style="width: 120px; padding: 8px; background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px;" min="0">
           </div>
         `;
       }
@@ -450,10 +456,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // 右側: 削除ボタン
       const rightHtml = `
         <div style="display: flex; align-items: center;">
-          <button type="button" class="btn-delete-item" data-section="${sectionPath}" data-index="${index}" title="この項目を削除" style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red); color: var(--accent-red); border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 0.9rem;">🗑️</button>
+          <button type="button" class="btn-delete-item" data-section="${safeSection}" data-index="${index}" title="この項目を削除" style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red); color: var(--accent-red); border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 0.9rem;">🗑️</button>
         </div>
       `;
 
+      // eslint-disable-next-line no-unsanitized/property
       row.innerHTML = leftHtml + priceHtml + rightHtml;
       container.appendChild(row);
     });
