@@ -67,15 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
       baseRepairs.forEach(item => {
         const checked = !!state.repairs[item.id];
         const price = state.mode === 'onsite' ? Number(item.onsitePrice || 0) : Number(item.shopPrice || 0);
+        const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+        const safeName = escape(item.name);
+        const safeId = escape(item.id);
 
         const row = document.createElement('div');
         row.className = 'item-row toggle-item';
+        // eslint-disable-next-line no-unsanitized/property
         row.innerHTML = `
-          <label class="toggle-card" for="chk_${item.id}">
-            <input type="checkbox" id="chk_${item.id}" ${checked ? 'checked' : ''}>
+          <label class="toggle-card" for="chk_${safeId}">
+            <input type="checkbox" id="chk_${safeId}" ${checked ? 'checked' : ''}>
             <div class="toggle-content">
-              <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
-              <span class="item-price" id="price_${item.id}">${formatJPY(price)}</span>
+              <span class="item-name">${safeName}</span>
+              <span class="item-price" id="price_${safeId}">${formatJPY(price)}</span>
             </div>
           </label>
         `;
@@ -110,13 +114,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       degradedParts.forEach(part => {
         const checked = !!state.repairs[part.id];
+        const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+        const safeName = escape(part.name);
+        const safeId = escape(part.id);
+
         const row = document.createElement('div');
         row.className = 'item-row toggle-item';
+        // eslint-disable-next-line no-unsanitized/property
         row.innerHTML = `
-          <label class="toggle-card" for="chk_${part.id}">
-            <input type="checkbox" id="chk_${part.id}" ${checked ? 'checked' : ''}>
+          <label class="toggle-card" for="chk_${safeId}">
+            <input type="checkbox" id="chk_${safeId}" ${checked ? 'checked' : ''}>
             <div class="toggle-content">
-              <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(part.name) : part.name}</span>
+              <span class="item-name">${safeName}</span>
               <span class="item-price price-degraded-part">${formatJPY(part.price)}</span>
             </div>
           </label>
@@ -154,17 +163,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (item.type === 'stepper') {
         const qty = state.repairs[item.id] || 0;
+        const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+        const safeName = escape(item.name);
+        const safeId = escape(item.id);
+
         const row = document.createElement('div');
         row.className = 'item-row counter-item';
+        // eslint-disable-next-line no-unsanitized/property
         row.innerHTML = `
           <div class="counter-info">
-            <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+            <span class="item-name">${safeName}</span>
             <span class="item-unit-price">${formatJPY(item.price)}</span>
           </div>
           <div class="counter-controls">
-            <button class="cnt-btn dec" data-target="cnt_rep_${item.id}">-</button>
-            <input type="number" id="cnt_rep_${item.id}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
-            <button class="cnt-btn inc" data-target="cnt_rep_${item.id}">+</button>
+            <button class="cnt-btn dec" data-target="cnt_rep_${safeId}">-</button>
+            <input type="number" id="cnt_rep_${safeId}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
+            <button class="cnt-btn inc" data-target="cnt_rep_${safeId}">+</button>
           </div>
         `;
         repairExtraContainer.appendChild(row);
@@ -196,13 +210,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       } else if (item.type === 'checkbox') {
         const checked = !!state.repairs[item.id];
+        const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+        const safeName = escape(item.name);
+        const safeId = escape(item.id);
+
         const row = document.createElement('div');
         row.className = 'item-row toggle-item';
+        // eslint-disable-next-line no-unsanitized/property
         row.innerHTML = `
-          <label class="toggle-card" for="chk_rep_${item.id}">
-            <input type="checkbox" id="chk_rep_${item.id}" ${checked ? 'checked' : ''}>
+          <label class="toggle-card" for="chk_rep_${safeId}">
+            <input type="checkbox" id="chk_rep_${safeId}" ${checked ? 'checked' : ''}>
             <div class="toggle-content">
-              <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+              <span class="item-name">${safeName}</span>
               <span class="item-price">${formatJPY(item.price)}</span>
             </div>
           </label>
@@ -231,17 +250,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     items.forEach(item => {
       const qty = state.items[item.id] || 0;
+      const escape = (str) => (window.AppCommon ? window.AppCommon.escapeHtml(str) : String(str));
+      const safeName = escape(item.name);
+      const safeId = escape(item.id);
+
       const row = document.createElement('div');
       row.className = 'item-row counter-item';
+      // eslint-disable-next-line no-unsanitized/property
       row.innerHTML = `
         <div class="counter-info">
-          <span class="item-name">${window.AppCommon ? window.AppCommon.escapeHtml(item.name) : item.name}</span>
+          <span class="item-name">${safeName}</span>
           <span class="item-unit-price">${formatJPY(item.price)}</span>
         </div>
         <div class="counter-controls">
-          <button class="cnt-btn dec" data-target="cnt_item_${item.id}">-</button>
-          <input type="number" id="cnt_item_${item.id}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
-          <button class="cnt-btn inc" data-target="cnt_item_${item.id}">+</button>
+          <button class="cnt-btn dec" data-target="cnt_item_${safeId}">-</button>
+          <input type="number" id="cnt_item_${safeId}" value="${qty}" min="${item.min != null ? item.min : 0}" max="${item.max != null ? item.max : 99}" class="cnt-input">
+          <button class="cnt-btn inc" data-target="cnt_item_${safeId}">+</button>
         </div>
       `;
       repairItemsContainer.appendChild(row);
@@ -342,7 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Generate Repair Summary for Clipboard Copy
   function getSummaryText() {
     const items = [];
-    const isShop = state.mode === 'shop';
 
     // 基本修理
     const baseRepairs = currentConfig.repairs?.baseRepairs || [];

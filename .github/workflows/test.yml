@@ -25,6 +25,12 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Run Security Lint
+        run: npm run lint
+
+      - name: Run Security Audit
+        run: npm audit --audit-level=high
+
       - name: Run Unit Tests
         run: npm run test:unit
 

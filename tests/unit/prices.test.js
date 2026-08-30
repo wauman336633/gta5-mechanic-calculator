@@ -28,7 +28,7 @@ function loadFirebaseConfigModule() {
   vm.createContext(context);
   try {
     vm.runInContext(code + '\n;globalThis.DEFAULT_PRICES = DEFAULT_PRICES;', context);
-  } catch (e) {
+  } catch (_e) {
     // Firebase初期化以外の部分を評価
   }
   return context.DEFAULT_PRICES || context.window?.DEFAULT_PRICES || context.globalThis?.DEFAULT_PRICES;

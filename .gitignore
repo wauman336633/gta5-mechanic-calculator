@@ -4,3 +4,11 @@
 node_modules/
 test-results/
 playwright-report/
+
+# Security & Secrets
+.env*
+!*.env.example
+*serviceAccount*.json
+*secret*.json
+*.pem
+*.key
