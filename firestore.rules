@@ -5,7 +5,7 @@ service cloud.firestore {
       // 誰でも店舗データ（価格表）の閲覧が可能
       allow read: if true;
 
-      // 店舗新規作成の許可（IDの一致、名前・IDのバリデーション）
+      // 店舗新規作成の許可（IDの一致、名前・IDのバリデーション、パスコード露出防止）
       allow create: if request.resource.data.id == shopId
         && request.resource.data.id is string
         && request.resource.data.id.size() >= 2
@@ -13,43 +13,32 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 1
         && request.resource.data.name.size() <= 50
+        && !('passcodeHash' in request.resource.data)
+        && !('passcode' in request.resource.data)
         && (
           !('ownerUid' in request.resource.data)
           || request.resource.data.ownerUid == null
           || (request.auth != null && request.resource.data.ownerUid == request.auth.uid)
         );
 
-      // 価格・設定更新の許可（オーナー認証、またはパスコードハッシュの照合、またはsample店舗）
+      // 価格・設定更新の許可（オーナー認証、またはオーナー未登録店舗への引き継ぎ、またはsample店舗）
       allow update: if request.resource.data.id == shopId
+        && !('passcodeHash' in request.resource.data)
+        && !('passcode' in request.resource.data)
         && (
           shopId == 'sample'
-          // オーナー本人による更新
-          || (request.auth != null && resource.data.ownerUid != null && request.auth.uid == resource.data.ownerUid)
-          // オーナー未登録店舗へのオーナー紐付け
+          // オーナー本人による更新（ownerUid の不変性を強制）
+          || (
+            request.auth != null
+            && resource.data.ownerUid != null
+            && request.auth.uid == resource.data.ownerUid
+            && (!('ownerUid' in request.resource.data) || request.resource.data.ownerUid == resource.data.ownerUid)
+          )
+          // オーナー未登録店舗への初回オーナー紐付け（claim）
           || (
             request.auth != null
             && (!('ownerUid' in resource.data) || resource.data.ownerUid == null)
             && request.resource.data.ownerUid == request.auth.uid
-            && (
-              (exists(/databases/$(database)/documents/shops/$(shopId)/auth/secret) && request.resource.data.passcodeHash == get(/databases/$(database)/documents/shops/$(shopId)/auth/secret).data.passcodeHash)
-              || (!exists(/databases/$(database)/documents/shops/$(shopId)/auth/secret) && (
-                (resource.data.passcodeHash != null && request.resource.data.passcodeHash == resource.data.passcodeHash)
-                || (resource.data.passcode != null && request.resource.data.passcode == resource.data.passcode)
-              ))
-            )
-          )
-          // パスコード認証による更新（新方式: secret照合）
-          || (
-            exists(/databases/$(database)/documents/shops/$(shopId)/auth/secret)
-            && request.resource.data.passcodeHash == get(/databases/$(database)/documents/shops/$(shopId)/auth/secret).data.passcodeHash
-          )
-          // パスコード認証による更新（旧方式レガシー照合）
-          || (
-            !exists(/databases/$(database)/documents/shops/$(shopId)/auth/secret)
-            && (
-              (resource.data.passcodeHash != null && request.resource.data.passcodeHash == resource.data.passcodeHash)
-              || (resource.data.passcode != null && request.resource.data.passcode == resource.data.passcode)
-            )
           )
         );
 
@@ -62,9 +51,10 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/shops/$(shopId))
           && get(/databases/$(database)/documents/shops/$(shopId)).data.ownerUid == request.auth.uid;
 
-        // 店舗新規作成時またはマイグレーション時の作成を許可
+        // 店舗新規作成時の同時バッチ作成を許可（先行作成攻撃防止）
         allow create: if request.resource.data.passcodeHash is string
-          && request.resource.data.passcodeHash.size() == 64;
+          && request.resource.data.passcodeHash.size() == 64
+          && existsAfter(/databases/$(database)/documents/shops/$(shopId));
 
         // オーナー本人によるパスコード再設定・変更を許可
         allow update: if request.auth != null

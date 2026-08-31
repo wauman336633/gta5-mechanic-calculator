@@ -694,6 +694,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    if (shopId !== 'sample' && !isOwnerAuthenticated) {
+      const isOwner = currentShopMeta && currentAuthUser && currentShopMeta.ownerUid === currentAuthUser.uid;
+      if (!isOwner) {
+        if (currentShopMeta && !currentShopMeta.ownerUid) {
+          alert("設定をクラウドに保存するには、Googleアカウントでログインして「オーナー登録」を行ってください。「セキュリティ設定」タブから連携できます。");
+        } else {
+          alert("設定の変更・保存は店舗オーナーのアカウントのみ可能です。オーナーアカウントでGoogleログインしてください。");
+        }
+        return;
+      }
+    }
+
     const btnSaveSettings = document.getElementById('btnSaveSettings');
     if (btnSaveSettings) {
       btnSaveSettings.disabled = true;

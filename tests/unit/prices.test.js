@@ -108,7 +108,7 @@ test('DEFAULT_CUSTOM_CONFIG and dual-mode bidirectional synchronization', () => 
   assert.equal(normalized.customConfig.buyback.length, 8);
 });
 
-test('hashPasscode generates valid 64-character SHA-256 hex string', async () => {
+test('hashPasscode generates valid 64-character salted SHA-256 hex string', async () => {
   const code = fs.readFileSync(path.join(rootDir, 'firebase-config.js'), 'utf-8');
   const context = {
     window: {},
@@ -122,10 +122,19 @@ test('hashPasscode generates valid 64-character SHA-256 hex string', async () =>
   vm.runInContext(code, context);
 
   const ShopManager = context.window.ShopManager;
-  const hash = await ShopManager.hashPasscode('1234');
-  assert.equal(typeof hash, 'string');
-  assert.equal(hash.length, 64);
-  assert.equal(/^[a-f0-9]{64}$/.test(hash), true);
+  const hashA = await ShopManager.hashPasscode('1234', 'shop-a');
+  const hashB = await ShopManager.hashPasscode('1234', 'shop-b');
+  const hashA2 = await ShopManager.hashPasscode('1234', 'SHOP-A'); // 大文字小文字同一視
+
+  assert.equal(typeof hashA, 'string');
+  assert.equal(hashA.length, 64);
+  assert.equal(/^[a-f0-9]{64}$/.test(hashA), true);
+  assert.equal(hashA, hashA2, 'Shop ID case difference should produce identical salted hash');
+  assert.notEqual(hashA, hashB, 'Different shop IDs must produce different salted hashes');
+
+  // 引数が欠落している場合の安全性
+  assert.equal(await ShopManager.hashPasscode('', 'shop-a'), '');
+  assert.equal(await ShopManager.hashPasscode('1234', ''), '');
 
   // sample店舗の検証
   const isSampleValid = await ShopManager.verifyShopPasscode('sample', '1111');

@@ -407,11 +407,12 @@ const SAMPLE_SHOP_ID = 'sample';
 const SAMPLE_PASSCODE = '1111';
 const SAMPLE_RESET_INTERVAL_MS = 60 * 60 * 1000; // 1時間 (ミリ秒)
 
-// パスコードのSHA-256ハッシュ化（Web Crypto API）
-async function hashPasscode(passcode) {
-  if (!passcode) return '';
+// パスコードのSHA-256ハッシュ化（Web Crypto API）- shopIdをSaltとして利用
+async function hashPasscode(passcode, shopId) {
+  if (!passcode || !shopId) return '';
+  const cleanShopId = String(shopId).toLowerCase().trim();
   const encoder = new TextEncoder();
-  const data = encoder.encode(passcode);
+  const data = encoder.encode(`${cleanShopId}:${passcode}`);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -516,13 +517,22 @@ function subscribeShopPrices(shopId, callback) {
         const now = Date.now();
         if (!isNaN(lastUpdated) && (now - lastUpdated > SAMPLE_RESET_INTERVAL_MS)) {
           try {
-            const sampleHashedPasscode = await hashPasscode(SAMPLE_PASSCODE);
-            await db.collection('shops').doc(cleanId).update({
-              passcodeHash: sampleHashedPasscode,
+            const sampleHashedPasscode = await hashPasscode(SAMPLE_PASSCODE, SAMPLE_SHOP_ID);
+            const resetUpdate = {
               prices: DEFAULT_PRICES,
               customConfig: DEFAULT_CUSTOM_CONFIG,
               updatedAt: new Date().toISOString()
-            });
+            };
+            if (data.passcodeHash) {
+              resetUpdate.passcodeHash = firebase.firestore.FieldValue.delete();
+            }
+            if (data.passcode) {
+              resetUpdate.passcode = firebase.firestore.FieldValue.delete();
+            }
+            await db.collection('shops').doc(cleanId).update(resetUpdate);
+            await db.collection('shops').doc(cleanId).collection('auth').doc('secret').set({
+              passcodeHash: sampleHashedPasscode
+            }).catch(() => {});
           } catch (e) {
             console.warn("Sample shop reset error", e);
           }
@@ -662,7 +672,7 @@ async function createShop(shopId, shopName, passcode) {
     throw new Error("店舗名は50文字以内で入力してください。");
   }
 
-  const hashed = await hashPasscode(passcode);
+  const hashed = await hashPasscode(passcode, cleanId);
   const currentUser = getCurrentUser();
   
   const publicData = {
@@ -696,7 +706,8 @@ async function createShop(shopId, shopName, passcode) {
     if (localStorage.getItem(`shop_info_${cleanId}`)) {
       throw new Error("指定された店舗IDは既に登録されています。");
     }
-    localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify({ ...publicData, passcodeHash: hashed }));
+    localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify({ ...publicData }));
+    localStorage.setItem(`shop_secret_${cleanId}`, JSON.stringify({ passcodeHash: hashed }));
     localStorage.setItem(`shop_prices_${cleanId}`, JSON.stringify({ id: cleanId, name: cleanName, prices: DEFAULT_PRICES, customConfig: DEFAULT_CUSTOM_CONFIG }));
   }
 
@@ -717,8 +728,6 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
     }
   }
 
-  const hashedInput = passcode ? await hashPasscode(passcode) : '';
-
   // newCustomConfig と newPrices の整合性を自動調整
   let finalCustomConfig = newCustomConfig;
   let finalPrices = newPrices;
@@ -737,18 +746,17 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
     const doc = await docRef.get();
     
     if (!doc.exists) {
-      const sampleHash = await hashPasscode(SAMPLE_PASSCODE);
+      const sampleHash = await hashPasscode(SAMPLE_PASSCODE, SAMPLE_SHOP_ID);
       const batch = db.batch();
       batch.set(docRef, {
         id: cleanId,
         name: cleanId === SAMPLE_SHOP_ID ? 'サンプル店舗' : cleanId.toUpperCase(),
-        passcodeHash: cleanId === SAMPLE_SHOP_ID ? sampleHash : hashedInput,
         prices: finalPrices,
         customConfig: finalCustomConfig,
         updatedAt: new Date().toISOString()
       });
       batch.set(docRef.collection('auth').doc('secret'), {
-        passcodeHash: cleanId === SAMPLE_SHOP_ID ? sampleHash : hashedInput
+        passcodeHash: cleanId === SAMPLE_SHOP_ID ? sampleHash : ''
       });
       await batch.commit();
       return true;
@@ -757,12 +765,8 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
     const data = doc.data() || {};
     const isOwner = currentUser && data.ownerUid && data.ownerUid === currentUser.uid;
 
-    // オーナー本人でない場合はパスコード照合
     if (!isOwner && cleanId !== SAMPLE_SHOP_ID) {
-      const isValid = await verifyShopPasscode(cleanId, passcode);
-      if (!isValid) {
-        throw new Error("管理パスコードが一致しません。");
-      }
+      throw new Error("設定を変更するには、店舗オーナーとしてGoogleログインする必要があります。");
     }
 
     const updatePayload = {
@@ -772,24 +776,12 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
       updatedAt: new Date().toISOString()
     };
 
-    if (hashedInput) {
-      updatePayload.passcodeHash = hashedInput; // Firestoreルール照合用
-    }
-
-    // レガシー店舗の場合、平文passcodeがあれば削除
+    // レガシー店舗の場合、平文passcodeやpasscodeHashがあれば削除
     if (data.passcode) {
       updatePayload.passcode = firebase.firestore.FieldValue.delete();
     }
-
-    // レガシー店舗でsecret未作成ならsecretを作成
-    const secretRef = docRef.collection('auth').doc('secret');
-    const secretDoc = await secretRef.get().catch(() => ({ exists: false }));
-    if (!secretDoc.exists && hashedInput) {
-      const batch = db.batch();
-      batch.update(docRef, updatePayload);
-      batch.set(secretRef, { passcodeHash: hashedInput });
-      await batch.commit();
-      return true;
+    if (data.passcodeHash) {
+      updatePayload.passcodeHash = firebase.firestore.FieldValue.delete();
     }
 
     await docRef.update(updatePayload);
@@ -801,10 +793,17 @@ async function updateShopPrices(shopId, passcode, newPrices, newCustomConfig) {
       const parsed = JSON.parse(cachedInfo);
       const isOwner = currentUser && parsed.ownerUid && parsed.ownerUid === currentUser.uid;
       if (!isOwner) {
-        const isMatch = (parsed.passcodeHash && parsed.passcodeHash === hashedInput) ||
-                        (parsed.passcode && parsed.passcode === passcode);
+        const secretData = localStorage.getItem(`shop_secret_${cleanId}`);
+        const hashedInput = passcode ? await hashPasscode(passcode, cleanId) : '';
+        let isMatch = false;
+        if (secretData) {
+          const secret = JSON.parse(secretData);
+          isMatch = secret.passcodeHash === hashedInput;
+        } else if (parsed.passcodeHash) {
+          isMatch = (parsed.passcodeHash === hashedInput) || (parsed.passcode && parsed.passcode === passcode);
+        }
         if (!isMatch) {
-          throw new Error("管理パスコードが一致しません。");
+          throw new Error("設定を変更するにはオーナーとしてログインするか、正しいパスコードが必要です。");
         }
       }
     }
@@ -832,7 +831,7 @@ async function verifyShopPasscode(shopId, passcode) {
     return false;
   }
 
-  const hashedInput = await hashPasscode(passcode);
+  const hashedInput = await hashPasscode(passcode, cleanId);
 
   if (firebaseInitialized && db) {
     const docRef = db.collection('shops').doc(cleanId);
@@ -845,12 +844,11 @@ async function verifyShopPasscode(shopId, passcode) {
       throw notFoundErr;
     }
 
-    // /auth/verify への書き込み試行によるルール側照合
+    // /auth/verify への書き込み試行によるルール側照合（平文passcodeは書き込まずpasscodeHashのみ）
     try {
       const verifyRef = docRef.collection('auth').doc('verify');
       await verifyRef.set({
         passcodeHash: hashedInput,
-        passcode: passcode,
         verifiedAt: new Date().toISOString()
       });
       return true;
@@ -861,6 +859,11 @@ async function verifyShopPasscode(shopId, passcode) {
       throw e;
     }
   } else {
+    const secretData = localStorage.getItem(`shop_secret_${cleanId}`);
+    if (secretData) {
+      const secret = JSON.parse(secretData);
+      return secret.passcodeHash === hashedInput;
+    }
     const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
     if (cachedInfo) {
       const parsed = JSON.parse(cachedInfo);
@@ -884,7 +887,7 @@ async function updateShopPasscode(shopId, newPasscode, currentPasscode = null) {
     throw new Error("サンプル店舗のパスコードは変更できません。");
   }
 
-  const newHashed = await hashPasscode(newPasscode);
+  const newHashed = await hashPasscode(newPasscode, cleanId);
   const currentUser = getCurrentUser();
 
   if (firebaseInitialized && db) {
@@ -921,19 +924,31 @@ async function updateShopPasscode(shopId, newPasscode, currentPasscode = null) {
 
     return true;
   } else {
+    if (currentPasscode) {
+      const currentHashed = await hashPasscode(currentPasscode, cleanId);
+      const secretData = localStorage.getItem(`shop_secret_${cleanId}`);
+      let isMatch = false;
+      if (secretData) {
+        const secret = JSON.parse(secretData);
+        isMatch = secret.passcodeHash === currentHashed;
+      } else {
+        const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
+        if (cachedInfo) {
+          const parsed = JSON.parse(cachedInfo);
+          isMatch = (parsed.passcodeHash && parsed.passcodeHash === currentHashed) ||
+                    (parsed.passcode && parsed.passcode === currentPasscode);
+        }
+      }
+      if (!isMatch) {
+        throw new Error("現在のパスコードが一致しません。");
+      }
+    }
+    localStorage.setItem(`shop_secret_${cleanId}`, JSON.stringify({ passcodeHash: newHashed }));
     const cachedInfo = localStorage.getItem(`shop_info_${cleanId}`);
     if (cachedInfo) {
       const parsed = JSON.parse(cachedInfo);
-      if (currentPasscode) {
-        const currentHashed = await hashPasscode(currentPasscode);
-        const isMatch = (parsed.passcodeHash && parsed.passcodeHash === currentHashed) ||
-                        (parsed.passcode && parsed.passcode === currentPasscode);
-        if (!isMatch) {
-          throw new Error("現在のパスコードが一致しません。");
-        }
-      }
-      parsed.passcodeHash = newHashed;
       delete parsed.passcode;
+      delete parsed.passcodeHash;
       localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify(parsed));
     }
     return true;
@@ -959,7 +974,7 @@ async function claimShopOwnership(shopId, passcode) {
     throw new Error("パスコードが一致しません。");
   }
 
-  const hashedInput = await hashPasscode(passcode);
+  const hashedInput = await hashPasscode(passcode, cleanId);
 
   if (firebaseInitialized && db) {
     const docRef = db.collection('shops').doc(cleanId);
@@ -973,12 +988,18 @@ async function claimShopOwnership(shopId, passcode) {
     }
 
     const batch = db.batch();
-    batch.update(docRef, {
+    const updateData = {
       ownerUid: currentUser.uid,
       ownerEmail: currentUser.email || '',
-      ownerDisplayName: currentUser.displayName || '',
-      passcodeHash: hashedInput
-    });
+      ownerDisplayName: currentUser.displayName || ''
+    };
+    if (data.passcode) {
+      updateData.passcode = firebase.firestore.FieldValue.delete();
+    }
+    if (data.passcodeHash) {
+      updateData.passcodeHash = firebase.firestore.FieldValue.delete();
+    }
+    batch.update(docRef, updateData);
 
     const secretRef = docRef.collection('auth').doc('secret');
     batch.set(secretRef, { passcodeHash: hashedInput }, { merge: true });
@@ -990,6 +1011,8 @@ async function claimShopOwnership(shopId, passcode) {
       const parsed = JSON.parse(cachedInfo);
       parsed.ownerUid = currentUser.uid;
       parsed.ownerEmail = currentUser.email || '';
+      delete parsed.passcode;
+      delete parsed.passcodeHash;
       localStorage.setItem(`shop_info_${cleanId}`, JSON.stringify(parsed));
     }
     return true;
