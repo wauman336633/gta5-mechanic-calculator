@@ -199,13 +199,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Calculate Total Buyback Amount
   function calculateTotal() {
-    let total = 0;
+    const { itemSubtotals, total } = window.CalculatorCore
+      ? window.CalculatorCore.calculateBuybackTotal(state, customMaterials)
+      : { itemSubtotals: {}, total: 0 };
 
     customMaterials.forEach(item => {
-      const qty = state[item.id] || 0;
-      const subtotal = qty * Number(item.price || 0);
-      total += subtotal;
-
+      const subtotal = itemSubtotals[item.id] || 0;
       const subDisplay = document.getElementById(`subtotal_${item.id}`);
       if (subDisplay) {
         subDisplay.textContent = formatJPY(subtotal);
@@ -220,20 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Generate Summary Text for Clipboard Copy
   function getSummaryText() {
-    const items = [];
-    customMaterials.forEach(item => {
-      const qty = state[item.id] || 0;
-      const unit = item.unit || '個';
-      if (qty > 0) {
-        items.push(`${item.name}x${qty}${unit}`);
-      }
-    });
-
     const total = calculateTotal();
-    if (items.length === 0) {
-      return '買取品なし';
-    }
-    return `【買取明細】 ${items.join(', ')} (合計: ¥${total.toLocaleString('ja-JP')})`;
+    return window.CalculatorCore
+      ? window.CalculatorCore.generateBuybackSummary(state, customMaterials, total)
+      : '買取品なし';
   }
 
   // Copy Actions

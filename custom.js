@@ -438,68 +438,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Calculate Total & Discount & Vault
   function calculateTotal() {
-    let subtotal = 0;
+    const result = window.CalculatorCore
+      ? window.CalculatorCore.calculateCustomTotal(state, currentConfig, 0.3)
+      : { subtotal: 0, discountAmount: 0, discountTagText: '', finalTotal: 0, vaultAmount: 0 };
 
-    // 1. 性能パーツ
-    const perfList = currentConfig.performance || [];
-    perfList.forEach(item => {
-      if (item.type === 'tiered') {
-        const lvl = Number(state.performance[item.id] || 0);
-        if (lvl > 0 && Array.isArray(item.prices) && item.prices[lvl] != null) {
-          subtotal += Number(item.prices[lvl]);
-        }
-      } else if (item.type === 'checkbox') {
-        if (state.performance[item.id]) {
-          subtotal += Number(item.price || 0);
-        }
-      }
-    });
-
-    // 2. 外装
-    const extList = currentConfig.exterior || [];
-    extList.forEach(item => {
-      if (item.type === 'stepper') {
-        const qty = Number(state.exterior[item.id] || 0);
-        subtotal += qty * Number(item.price || 0);
-      } else if (item.type === 'checkbox') {
-        if (state.exterior[item.id]) {
-          subtotal += Number(item.price || 0);
-        }
-      }
-    });
-
-    // 3. NOS / 追加作業
-    const repList = currentConfig.repairs || [];
-    repList.forEach(item => {
-      const qty = Number(state.repairs[item.id] || 0);
-      subtotal += qty * Number(item.price || 0);
-    });
-
-    // 4. 販売品
-    const itemList = currentConfig.items || [];
-    itemList.forEach(item => {
-      const qty = Number(state.items[item.id] || 0);
-      subtotal += qty * Number(item.price || 0);
-    });
-
-    // 割引計算
-    let discountAmount = 0;
-    let discountTagText = '';
-
-    if (state.discount.preset > 0) {
-      discountAmount = Math.floor(subtotal * (state.discount.preset / 100));
-      discountTagText = `${state.discount.preset}% OFF 適用中`;
-    } else if (state.discount.customType === 'percent') {
-      const p = Math.min(100, Math.max(0, state.discount.customValue));
-      discountAmount = Math.floor(subtotal * (p / 100));
-      discountTagText = `${p}% OFF 適用中`;
-    } else if (state.discount.customType === 'fixed') {
-      discountAmount = Math.min(subtotal, state.discount.customValue);
-      discountTagText = `-${formatJPY(discountAmount)} 適用中`;
-    }
-
-    const finalTotal = Math.max(0, subtotal - discountAmount);
-    const vaultAmount = Math.floor(finalTotal * 0.3);
+    const { subtotal, discountTagText, finalTotal, vaultAmount } = result;
 
     // UI表示更新
     if (subtotalDisplay) subtotalDisplay.textContent = formatJPY(subtotal);
@@ -514,59 +457,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (totalDisplay) totalDisplay.textContent = formatJPY(finalTotal);
     if (vaultDisplay) vaultDisplay.textContent = formatJPY(vaultAmount);
 
-    return { subtotal, discountAmount, finalTotal, vaultAmount };
+    return result;
   }
 
   // Generate Summary Text for Clipboard Copy
   function getSummaryText(includeOwnCar = false) {
-    const items = [];
-
-    // 性能
-    const perfList = currentConfig.performance || [];
-    perfList.forEach(item => {
-      if (item.type === 'tiered') {
-        const lvl = Number(state.performance[item.id] || 0);
-        if (lvl > 0) {
-          const label = (item.labels && item.labels[lvl]) ? item.labels[lvl] : `Lv${lvl}`;
-          items.push(`${item.name} ${label}`);
-        }
-      } else if (item.type === 'checkbox' && state.performance[item.id]) {
-        items.push(item.name);
-      }
-    });
-
-    // 外装
-    const extList = currentConfig.exterior || [];
-    extList.forEach(item => {
-      if (item.type === 'stepper') {
-        const qty = Number(state.exterior[item.id] || 0);
-        if (qty > 0) items.push(`${item.name}x${qty}`);
-      } else if (item.type === 'checkbox' && state.exterior[item.id]) {
-        items.push(item.name);
-      }
-    });
-
-    // NOS
-    const repList = currentConfig.repairs || [];
-    repList.forEach(item => {
-      const qty = Number(state.repairs[item.id] || 0);
-      if (qty > 0) items.push(`${item.name}x${qty}`);
-    });
-
-    // 販売品
-    const itemList = currentConfig.items || [];
-    itemList.forEach(item => {
-      const qty = Number(state.items[item.id] || 0);
-      if (qty > 0) items.push(`${item.name}x${qty}`);
-    });
-
-    const { finalTotal, vaultAmount } = calculateTotal();
-    const itemsStr = items.length > 0 ? items.join(', ') : 'カスタム作業なし';
-
-    if (includeOwnCar) {
-      return `自車 ${vaultAmount} ${itemsStr}`;
-    }
-    return `${vaultAmount} ${itemsStr} (請求: ¥${finalTotal.toLocaleString('ja-JP')})`;
+    const result = calculateTotal();
+    return window.CalculatorCore
+      ? window.CalculatorCore.generateCustomSummary(state, currentConfig, result, includeOwnCar)
+      : 'カスタム作業なし';
   }
 
   // Copy Actions

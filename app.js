@@ -326,44 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Calculate Total Amount
   function calculateTotal() {
-    let total = 0;
-    const isShop = state.mode === 'shop';
-
-    // 1. 基本修理
-    const baseRepairs = currentConfig.repairs?.baseRepairs || [];
-    baseRepairs.forEach(item => {
-      if (state.repairs[item.id]) {
-        total += isShop ? Number(item.shopPrice || 0) : Number(item.onsitePrice || 0);
-      }
-    });
-
-    // 2. 劣化パーツ
-    const degradedParts = currentConfig.repairs?.degradedParts || [];
-    degradedParts.forEach(part => {
-      if (state.repairs[part.id]) {
-        total += Number(part.price || 0);
-      }
-    });
-
-    // 3. 追加サービス (NOS, タイヤ等)
-    const extraServices = currentConfig.repairs?.extraServices || [];
-    extraServices.forEach(item => {
-      if (item.id === 'aircraft') {
-        if (state.aircraft) total += Number(item.price || 0);
-      } else if (item.type === 'stepper') {
-        const qty = Number(state.repairs[item.id] || 0);
-        total += qty * Number(item.price || 0);
-      } else if (item.type === 'checkbox') {
-        if (state.repairs[item.id]) total += Number(item.price || 0);
-      }
-    });
-
-    // 4. 販売品
-    const repairItems = currentConfig.repairItems || [];
-    repairItems.forEach(item => {
-      const qty = Number(state.items[item.id] || 0);
-      total += qty * Number(item.price || 0);
-    });
+    const total = window.CalculatorCore
+      ? window.CalculatorCore.calculateRepairTotal(state, currentConfig)
+      : 0;
 
     if (repairTotalDisplay) {
       repairTotalDisplay.textContent = formatJPY(total);
@@ -373,51 +338,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Generate Repair Summary for Clipboard Copy
   function getSummaryText() {
-    const items = [];
-
-    // 基本修理
-    const baseRepairs = currentConfig.repairs?.baseRepairs || [];
-    baseRepairs.forEach(item => {
-      if (state.repairs[item.id]) {
-        items.push(item.name);
-      }
-    });
-
-    // 劣化パーツ
-    const degradedParts = currentConfig.repairs?.degradedParts || [];
-    degradedParts.forEach(part => {
-      if (state.repairs[part.id]) {
-        items.push(part.name);
-      }
-    });
-
-    // 航空機
-    if (state.aircraft) {
-      items.push('航空機/船加算');
-    }
-
-    // 追加サービス
-    const extraServices = currentConfig.repairs?.extraServices || [];
-    extraServices.forEach(item => {
-      if (item.id !== 'aircraft') {
-        if (item.type === 'stepper') {
-          const qty = Number(state.repairs[item.id] || 0);
-          if (qty > 0) items.push(`${item.name}x${qty}`);
-        } else if (item.type === 'checkbox' && state.repairs[item.id]) {
-          items.push(item.name);
-        }
-      }
-    });
-
-    // 販売品
-    const repairItems = currentConfig.repairItems || [];
-    repairItems.forEach(item => {
-      const qty = Number(state.items[item.id] || 0);
-      if (qty > 0) items.push(`${item.name}x${qty}`);
-    });
-
     const total = calculateTotal();
-    return items.length > 0 ? `${total} ${items.join(', ')}` : '作業なし';
+    return window.CalculatorCore
+      ? window.CalculatorCore.generateRepairSummary(state, currentConfig, total)
+      : '作業なし';
   }
 
   // Mode Switch Events
