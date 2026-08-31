@@ -89,29 +89,26 @@ test.describe('Repair Calculator E2E Interaction', () => {
     // 初期状態の合計表示を確認
     const totalEl = page.locator('#repairTotalDisplay');
     await expect(totalEl).toBeVisible();
+    await expect(totalEl).toHaveText('¥0');
 
-    // フル修理チェックボックスをクリック
-    const fullRepairChk = page.locator('#chkFullRepair');
-    if (await fullRepairChk.isVisible()) {
-      await fullRepairChk.check();
-      // 合計が ¥0 より大きくなっていることを確認
-      const text = await totalEl.textContent();
-      expect(text).not.toBe('¥0');
-    }
+    // フル修理を選択
+    const fullRepairLabel = page.locator('label[for="chk_full"]').first();
+    await expect(fullRepairLabel).toBeVisible();
+    await fullRepairLabel.click();
 
-    // 出張モード切り替え
+    // 合計が店内修理額 (¥200,000) になっていることを確認
+    await expect(totalEl).toHaveText('¥200,000');
+
+    // 出張モード切り替え -> 出張料金 (¥300,000) に更新されること
     const onsiteBtn = page.locator('#btnModeOnsite');
-    if (await onsiteBtn.isVisible()) {
-      await onsiteBtn.click();
-      await expect(onsiteBtn).toHaveClass(/active/);
-    }
+    await onsiteBtn.click();
+    await expect(onsiteBtn).toHaveClass(/active/);
+    await expect(totalEl).toHaveText('¥300,000');
 
-    // リセットボタン
+    // 一括リセット -> ¥0 に戻ること
     const resetBtn = page.locator('#btnResetRepair');
-    if (await resetBtn.isVisible()) {
-      await resetBtn.click();
-      await expect(totalEl).toHaveText('¥0');
-    }
+    await resetBtn.click();
+    await expect(totalEl).toHaveText('¥0');
   });
 });
 
@@ -119,16 +116,15 @@ test.describe('Custom Calculator E2E Interaction', () => {
   test('calculates custom costs when selecting options', async ({ page }) => {
     await page.goto('/custom.html?shop=sample');
 
-    const totalEl = page.locator('#customTotalDisplay, #totalDisplay, .total-amount').first();
+    const totalEl = page.locator('#totalDisplay');
     await expect(totalEl).toBeVisible();
+    await expect(totalEl).toHaveText('¥0');
 
-    // エンジングレード等の選択ボタンをクリック
-    const perfBtn = page.locator('.btn-grid button, .spec-btn').first();
-    if (await perfBtn.isVisible()) {
-      await perfBtn.click();
-      const text = await totalEl.textContent();
-      expect(text).toContain('¥');
-    }
+    // エンジングレードLv1の選択ボタンをクリック
+    const perfBtn = page.locator('.lvl-btn').first();
+    await expect(perfBtn).toBeVisible();
+    await perfBtn.click();
+    await expect(totalEl).not.toHaveText('¥0');
   });
 });
 
@@ -136,17 +132,15 @@ test.describe('Buyback Calculator E2E Interaction', () => {
   test('calculates buyback total when typing quantities', async ({ page }) => {
     await page.goto('/buyback.html?shop=sample');
 
-    const totalEl = page.locator('#buybackTotalDisplay, #totalDisplay, .total-amount').first();
+    const totalEl = page.locator('#buybackTotalDisplay');
     await expect(totalEl).toBeVisible();
+    await expect(totalEl).toHaveText('¥0');
 
-    // 最初の数量入力欄に数値を入力
-    const input = page.locator('input[type="number"]').first();
-    if (await input.isVisible()) {
-      await input.fill('10');
-      await input.dispatchEvent('input');
-      const text = await totalEl.textContent();
-      expect(text).not.toBe('¥0');
-    }
+    // 最初の数量入力欄（スチール）に10を入力
+    const input = page.locator('.buyback-input').first();
+    await expect(input).toBeVisible();
+    await input.fill('10');
+    await expect(totalEl).not.toHaveText('¥0');
   });
 });
 
