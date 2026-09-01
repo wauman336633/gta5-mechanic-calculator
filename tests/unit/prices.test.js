@@ -143,3 +143,35 @@ test('hashPasscode generates valid 64-character salted SHA-256 hex string', asyn
   const isSampleInvalid = await ShopManager.verifyShopPasscode('sample', 'wrong');
   assert.equal(isSampleInvalid, false);
 });
+
+test('trackEvent is exported and operates safely in local/test environment', () => {
+  const code = fs.readFileSync(path.join(rootDir, 'firebase-config.js'), 'utf-8');
+  let loggedMessage = null;
+  const context = {
+    window: {
+      location: { hostname: 'localhost' }
+    },
+    document: { getElementById: () => null, addEventListener: () => {} },
+    localStorage: { getItem: () => null, setItem: () => {} },
+    crypto: globalThis.crypto,
+    TextEncoder: globalThis.TextEncoder,
+    console: {
+      ...console,
+      log: (...args) => {
+        loggedMessage = args;
+      }
+    }
+  };
+  vm.createContext(context);
+  vm.runInContext(code, context);
+
+  assert.equal(typeof context.window.trackEvent, 'function');
+  assert.equal(typeof context.window.ShopManager.trackEvent, 'function');
+
+  context.window.trackEvent('test_event', { page: 'index' });
+  assert.ok(loggedMessage);
+  assert.equal(loggedMessage[0], '[Analytics (Local)]');
+  assert.equal(loggedMessage[1], 'test_event');
+  assert.deepEqual(loggedMessage[2], { page: 'index' });
+});
+

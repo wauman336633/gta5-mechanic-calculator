@@ -46,7 +46,12 @@ const AppCommon = {
   },
 
   // 3. クリップボードコピー
-  copyToClipboard(text, successMsg) {
+  copyToClipboard(text, successMsg, type) {
+    const copyType = type || this.getCurrentPageType() || 'general';
+    const textLength = (text != null ? String(text) : '').length;
+    if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+      window.trackEvent('copy_estimate', { type: copyType, textLength });
+    }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
         this.showToast(successMsg);
@@ -150,6 +155,21 @@ const AppCommon = {
         }
       }
     });
+  },
+
+  // 4-4. 店舗切り替え処理 & トラッキング
+  switchShop(shopId) {
+    if (!shopId) return;
+    const cleanId = shopId.toLowerCase().trim();
+    if (typeof window !== 'undefined') {
+      if (window.ShopManager && window.ShopManager.setShopId) {
+        window.ShopManager.setShopId(cleanId);
+      }
+      if (typeof window.trackEvent === 'function') {
+        window.trackEvent('shop_change', { shop_id: cleanId });
+      }
+    }
+    this.syncNavigationShopParams(cleanId);
   },
 
   // 5. 店舗共有URLのコピー機能

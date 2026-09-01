@@ -715,6 +715,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // 非破壊デュアルモードで customConfig と prices を同時更新
       await window.ShopManager.updateShopPrices(shopId, authenticatedPasscode, null, currentConfig);
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('shop_update', { shop_id: shopId });
+      }
       if (window.AppCommon) {
         window.AppCommon.showToast("✅ 設定を正常に更新・保存しました！");
       }

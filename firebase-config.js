@@ -355,12 +355,34 @@ const firebaseConfig = {
   projectId: "mechanic-calculator",
   storageBucket: "mechanic-calculator.firebasestorage.app",
   messagingSenderId: "728261647308",
-  appId: "1:728261647308:web:e4865ff743e195bcce9b69"
+  appId: "1:728261647308:web:e4865ff743e195bcce9b69",
+  measurementId: "G-MQD7MQCZ4F"
 };
 
 let db = null;
 let auth = null;
+let analytics = null;
 let firebaseInitialized = false;
+
+function isLocalOrTestEnv() {
+  if (typeof window === 'undefined' || !window.location) return true;
+  const hostname = window.location.hostname || '';
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname === '0.0.0.0';
+}
+
+function initAnalytics() {
+  if (analytics) return analytics;
+  if (typeof firebase !== 'undefined' && typeof firebase.analytics === 'function' && firebaseConfig.measurementId) {
+    if (!isLocalOrTestEnv()) {
+      try {
+        analytics = firebase.analytics();
+      } catch (e) {
+        console.warn("Analytics initialization failed", e);
+      }
+    }
+  }
+  return analytics;
+}
 
 function initFirebase() {
   if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY") {
@@ -371,8 +393,26 @@ function initFirebase() {
     if (firebase.auth) {
       auth = firebase.auth();
     }
+    initAnalytics();
     firebaseInitialized = true;
   }
+}
+
+function trackEvent(eventName, eventParams = {}) {
+  initFirebase();
+  if (isLocalOrTestEnv() || !analytics) {
+    console.log('[Analytics (Local)]', eventName, eventParams);
+    return;
+  }
+  try {
+    analytics.logEvent(eventName, eventParams);
+  } catch (e) {
+    console.warn('[Analytics Error]', e);
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.trackEvent = trackEvent;
 }
 
 // 2. 店舗ID管理
@@ -400,6 +440,9 @@ function getShopId() {
 function setShopId(shopId) {
   const cleanId = shopId.toLowerCase().trim();
   localStorage.setItem(STORAGE_KEY, cleanId);
+  if (typeof trackEvent === 'function') {
+    trackEvent('shop_change', { shop_id: cleanId });
+  }
   return cleanId;
 }
 
@@ -1185,7 +1228,8 @@ window.ShopManager = {
   getShopHistory,
   addShopToHistory,
   removeShopFromHistory,
-  sendFeedback
+  sendFeedback,
+  trackEvent
 };
 
 

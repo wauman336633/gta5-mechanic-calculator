@@ -32,7 +32,8 @@ export default [
         DEFAULT_PASSCODE_HASH: 'readonly',
         CURRENT_SHOP_ID: 'writable',
         IS_DEFAULT_SHOP: 'writable',
-        SHOP_CONFIG: 'writable'
+        SHOP_CONFIG: 'writable',
+        trackEvent: 'writable'
       }
     },
     rules: {
