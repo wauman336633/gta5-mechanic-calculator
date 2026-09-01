@@ -413,6 +413,12 @@ function trackEvent(eventName, eventParams = {}) {
 
 if (typeof window !== 'undefined') {
   window.trackEvent = trackEvent;
+  // ページロード時に即時・安全に初期化してGA4 page_view を自動送信
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => initFirebase());
+  } else {
+    initFirebase();
+  }
 }
 
 // 2. 店舗ID管理
