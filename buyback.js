@@ -230,8 +230,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCopyBuybackTotal.addEventListener('click', () => {
       const total = calculateTotal();
       const str = total.toString();
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('calculate_buyback', { shop_id: shopId });
+      }
       if (window.AppCommon) {
-        window.AppCommon.copyToClipboard(str, `買取合計額 「 ${str} 」 をコピーしました！`);
+        window.AppCommon.copyToClipboard(str, `買取合計額 「 ${str} 」 をコピーしました！`, 'buyback_total');
       }
     });
   }
@@ -239,8 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCopyBuybackSummary) {
     btnCopyBuybackSummary.addEventListener('click', () => {
       const summary = getSummaryText();
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('calculate_buyback', { shop_id: shopId });
+      }
       if (window.AppCommon) {
-        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`);
+        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`, 'buyback_summary');
       }
     });
   }

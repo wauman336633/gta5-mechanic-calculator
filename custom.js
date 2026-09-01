@@ -473,8 +473,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCopyNumber.addEventListener('click', () => {
       const { finalTotal } = calculateTotal();
       const str = finalTotal.toString();
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('calculate_custom', { shop_id: shopId });
+      }
       if (window.AppCommon) {
-        window.AppCommon.copyToClipboard(str, `請求額 「 ${str} 」 をコピーしました！`);
+        window.AppCommon.copyToClipboard(str, `請求額 「 ${str} 」 をコピーしました！`, 'custom_total');
       }
     });
   }
@@ -483,8 +486,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCopyVault.addEventListener('click', () => {
       const { vaultAmount } = calculateTotal();
       const str = vaultAmount.toString();
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('calculate_custom', { shop_id: shopId });
+      }
       if (window.AppCommon) {
-        window.AppCommon.copyToClipboard(str, `金庫額 「 ${str} 」 をコピーしました！`);
+        window.AppCommon.copyToClipboard(str, `金庫額 「 ${str} 」 をコピーしました！`, 'custom_vault');
       }
     });
   }
@@ -492,8 +498,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCopyVaultSummary) {
     btnCopyVaultSummary.addEventListener('click', () => {
       const summary = getSummaryText(false);
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('calculate_custom', { shop_id: shopId });
+      }
       if (window.AppCommon) {
-        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`);
+        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`, 'custom_vault_summary');
       }
     });
   }
@@ -501,8 +510,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCopyOwnCar) {
     btnCopyOwnCar.addEventListener('click', () => {
       const summary = getSummaryText(true);
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('calculate_custom', { shop_id: shopId });
+      }
       if (window.AppCommon) {
-        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`);
+        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`, 'custom_owncar_summary');
       }
     });
   }

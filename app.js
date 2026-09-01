@@ -373,8 +373,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCopyRepairTotal.addEventListener('click', () => {
       const total = calculateTotal();
       const str = total.toString();
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('calculate_repair', { shop_id: shopId });
+      }
       if (window.AppCommon) {
-        window.AppCommon.copyToClipboard(str, `修理合計額 「 ${str} 」 をコピーしました！`);
+        window.AppCommon.copyToClipboard(str, `修理合計額 「 ${str} 」 をコピーしました！`, 'repair_total');
       }
     });
   }
@@ -382,8 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnCopyRepairSummary) {
     btnCopyRepairSummary.addEventListener('click', () => {
       const summary = getSummaryText();
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('calculate_repair', { shop_id: shopId });
+      }
       if (window.AppCommon) {
-        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`);
+        window.AppCommon.copyToClipboard(summary, `「 ${summary} 」 をコピーしました！`, 'repair_summary');
       }
     });
   }

@@ -106,6 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       await window.ShopManager.createShop(shopId, shopName, passcode);
+      if (typeof window !== 'undefined' && typeof window.trackEvent === 'function') {
+        window.trackEvent('shop_create', { shop_id: shopId });
+      }
       alert(`「${shopName}」の計算機を開設しました！\n専用URL: ?shop=${shopId}`);
       window.location.href = `repair.html?shop=${encodeURIComponent(shopId)}`;
     } catch (err) {
